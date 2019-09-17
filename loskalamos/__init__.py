@@ -1,11 +1,12 @@
 import os
 
-from flask import Flask
-
+from flask import Flask, render_template
+from flask_bootstrap import Bootstrap
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    Bootstrap(app)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'loskalamos.sqlite'),
@@ -26,9 +27,13 @@ def create_app(test_config=None):
 
     from . import db
     db.init_app(app)
+
+    from . import auth
+    app.register_blueprint(auth.bp)
+
     # a simple page that says hello
-    @app.route('/los')
-    def hello():
-        return 'los kalamos'
+    @app.route('/')
+    def index():
+        return render_template('index.html')
 
     return app
