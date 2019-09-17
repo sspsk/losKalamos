@@ -1,0 +1,4 @@
+include loskalamos/schema.sql
+graft loskalamos/static
+graft loskalamos/templates
+global-exclude *.pyc
