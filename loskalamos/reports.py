@@ -31,5 +31,9 @@ def report():
 
 @bp.route('/entries')
 def entries():
-    
-    return render_template('reports/entries.html')
+    db = get_db()
+    if g.user['username'] == "admin":
+        posts = db.execute('SELECT type, area FROM report ORDER BY created DESC').fetchall()
+    else:
+        posts =  db.execute('SELECT type, area FROM report WHERE type = ? ORDER BY created DESC ',(g.user['type'], )).fetchall()
+    return render_template('reports/entries.html',posts = posts)

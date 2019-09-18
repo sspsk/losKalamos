@@ -30,7 +30,7 @@ def init_db_command():
     password = input('Set admin password: ')
     password  = generate_password_hash(password)
     db = get_db()
-    db.execute('INSERT INTO user (username, password) VALUES (?, ?)',('admin', password))
+    db.execute('INSERT INTO user (username, password, type) VALUES (?, ?, ?)',('admin', password, 'admin'))
     db.commit()
     click.echo('Initialized the database and set admin privilages.')
 

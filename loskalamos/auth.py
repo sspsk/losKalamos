@@ -12,6 +12,7 @@ bp = Blueprint('auth', __name__)
 def register():
     username = request.form['username']
     password = request.form['password']
+    type = request.form['type']
     db = get_db()
     error  = None
 
@@ -22,9 +23,11 @@ def register():
         error = 'Password is required.'
     elif db.execute('SELECT id FROM user WHERE username = ?',(username, )).fetchone() is not None:
         error = 'User {} is already registered.'.format(username)
+    elif not type:
+        error = 'Type is required.'
 
     if error is None:
-        db.execute('INSERT INTO user (username, password) VALUES (?, ?)',(username, generate_password_hash(password)))
+        db.execute('INSERT INTO user (username, password, type) VALUES (?, ?, ?)',(username, generate_password_hash(password), type))
         db.commit()
         flash('Successful registration.')
 
@@ -41,6 +44,7 @@ def index():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        
         db = get_db()
         error = None
         user = db.execute(
