@@ -1,0 +1,26 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+ {% for message in get_flashed_messages() %}
+   <div class="flash">{{ message }}</div>
+ {% endfor %}
+<ul>
+  <li>
+    <form method="post" action="{{ url_for('reports.report') }}">
+     <label for="type">Type</label>
+     <input name="type" id="type" required>
+     <label for="area">Area</label>
+     <input name="area" id="area" required>
+     <input type="submit" value="Report">
+    </form>
+  </li>
+  <li>
+  <form method="post">
+   <label for="username">Username</label>
+   <input name="username" id="username" required>
+   <label for="password">Password</label>
+   <input type="password" name="password" id="password" required>
+   <input type="submit" value="Log In">
+  </form>
+  </li>
+{% endblock %}

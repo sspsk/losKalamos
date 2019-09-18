@@ -6,37 +6,38 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from loskalamos.db import get_db
 
-bp = Blueprint('auth', __name__, url_prefix='/auth')
+bp = Blueprint('auth', __name__)
 
-@bp.route('/register', methods=('GET','POST'))
+@bp.route('/register', methods=('POST', ))
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        db = get_db()
-        error  = None
+    username = request.form['username']
+    password = request.form['password']
+    db = get_db()
+    error  = None
 
 
-        if not username:
-            error = 'Username is required.'
-        elif not password:
-            error = 'Password is required.'
-        elif db.execute('SELECT id FROM user WHERE username = ?',(username, )).fetchone() is not None:
-            error = 'User {} is already registered.'.format(username)
+    if not username:
+        error = 'Username is required.'
+    elif not password:
+        error = 'Password is required.'
+    elif db.execute('SELECT id FROM user WHERE username = ?',(username, )).fetchone() is not None:
+        error = 'User {} is already registered.'.format(username)
 
-        if error is None:
-            db.execute('INSERT INTO user (username, password) VALUES (?, ?)',(username, generate_password_hash(password)))
-            db.commit()
-            return redirect(url_for('entries'))
+    if error is None:
+        db.execute('INSERT INTO user (username, password) VALUES (?, ?)',(username, generate_password_hash(password)))
+        db.commit()
+        flash('Successful registration.')
 
+    if error is not  None:
         flash(error)
-
-    return render_template('auth/register.html')
-
+    return redirect(url_for('reports.entries'))
 
 
-@bp.route('/login', methods=('GET','POST'))
-def login():
+
+
+
+@bp.route('/', methods=('GET','POST'))
+def index():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -54,11 +55,11 @@ def login():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
-            return redirect(url_for('entries'))
+            return redirect(url_for('reports.entries'))
 
         flash(error)
 
-    return render_template('auth/login.html')
+    return render_template('auth/index.html')
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -74,4 +75,4 @@ def load_logged_in_user():
 @bp.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect(url_for('auth.index'))

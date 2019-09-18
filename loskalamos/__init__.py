@@ -30,10 +30,13 @@ def create_app(test_config=None):
 
     from . import auth
     app.register_blueprint(auth.bp)
+    
+
+    from . import reports
+    app.register_blueprint(reports.bp)
+
 
     # a simple page that says hello
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+
 
     return app
