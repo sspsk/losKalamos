@@ -36,4 +36,4 @@ def entries():
         posts = db.execute('SELECT type, area FROM report ORDER BY created DESC').fetchall()
     else:
         posts =  db.execute('SELECT type, area FROM report WHERE type = ? ORDER BY created DESC ',(g.user['type'], )).fetchall()
-    return render_template('reports/entries.html',posts = posts)
+    return render_template('reports/entries.html',posts = posts )
