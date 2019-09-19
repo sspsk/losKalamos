@@ -1,9 +1,10 @@
 Click==7.0
 dominate==2.4.0
 Flask==1.1.1
+gunicorn==19.9.0
 itsdangerous==1.1.0
 Jinja2==2.10.1
--e git+https://github.com/sspsk/losKalamos.git@01217599e7a92c072b3239077083f15e130198b3#egg=loskalamos
+loskalamos==1.0.0
 MarkupSafe==1.1.1
 python-dotenv==0.10.3
 visitor==0.1.3
