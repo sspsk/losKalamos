@@ -2,25 +2,25 @@
 {% block title %}Login{% endblock %}
 {% block content %}
  {% for message in get_flashed_messages() %}
-   <div class="flash">{{ message }}</div>
+     <div class="alert alert-info">{{ message }}</div>
  {% endfor %}
-<ul>
-  <li>
-    <form method="post" action="{{ url_for('reports.report') }}">
-     <label for="type">Type</label>
-     <input name="type" id="type" required>
-     <label for="area">Area</label>
-     <input name="area" id="area" required>
-     <input type="submit" value="Report">
+
+
+<span style="float:left">
+    <form class="text-center border border-light p-5" method="post" action="{{ url_for('reports.report') }}">
+          <p class="h4 mb-4">Report</p>
+          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Type" name="type" required>
+          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Area" name="area" required>
+          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Mulfunction" name="mulf" required>
+         <button class="btn btn-info btn-block my-4" type="submit">Report</button>
     </form>
-  </li>
-  <li>
-  <form method="post">
-   <label for="username">Username</label>
-   <input name="username" id="username" required>
-   <label for="password">Password</label>
-   <input type="password" name="password" id="password" required>
-   <input type="submit" value="Log In">
+</span>
+<span style="float:right">
+  <form class="text-center border border-light p-5" method="post">
+        <p class="h4 mb-4">Sign in</p>
+        <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Username" name="username" required>
+        <input type="password" id="defaultLoginFormPassword" class="form-control mb-4" placeholder="Password" name="password" required>
+       <button class="btn btn-info btn-block my-4" type="submit">Sign in</button>
   </form>
-  </li>
+</span>
 {% endblock %}

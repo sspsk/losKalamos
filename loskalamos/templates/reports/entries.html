@@ -9,8 +9,9 @@
       <a class="navbar-brand" >Entries</a>
     </div>
     <ul class="nav navbar-nav">
-      <li <a href="#">{{ g.user['username']}}</a></li>
+      <li><a href="#">Signed in as {{ g.user['username']}}</a></li>
       <li><a href="{{url_for('auth.logout')}}">Log Out</a></li>
+
 
     </ul>
   </div>
@@ -18,7 +19,8 @@
 
 
 {% for message in get_flashed_messages() %}
-  <div class="flash">{{ message }}</div>
+  <div class="alert alert-info">{{ message }}</div>
+
 {% endfor %}
   {% if g.user['username'] == "admin" %}
     <h2>Register a technician</h2>
@@ -29,13 +31,33 @@
      <input type="password" name="password" id="password" required>
      <label for="type">Type of work</label>
      <input name="type" id="type" required>
-     <input type="button" class="btn btn-primary" value="Register">
+     <input type="submit" class="btn btn-primary" value="Register">
 
     </form>
   {% endif %}
+
+
   <ul>
-  {% for post in posts %}
-    <li>{{ post['type'] }} in {{post['area']}}</li>
+  <p>Available reports</p>
+  {% for post in postsnottaken %}
+    <li>
+      <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
+      <label>{{ post['type'] }} in {{post['area']}} more specificly: {{post['mulf']}}. Available to take. </label>
+      <input type="submit" class="btn btn-primary" value="Take">
+      </form>
+    </li>
   {% endfor %}
+  <p>My reports</p>
+  {% for post in poststaken %}
+    <li>
+      <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
+      <label>{{ post['type'] }} in {{post['area']}} more specificly: {{post['mulf']}} taken by: {{post['username']}}</label>
+      {% if post['takenby'] == g.user['id'] %}
+      <input type="submit" class="btn btn-danger" value="Delete">
+      {% endif %}
+      </form>
+    </li>
+  {% endfor %}
+
 
 {% endblock %}
