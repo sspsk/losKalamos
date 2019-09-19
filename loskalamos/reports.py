@@ -76,3 +76,13 @@ def delete(id):
     db.execute('DELETE FROM report WHERE id = ?',(id, ))
     db.commit()
     return redirect(url_for('reports.entries'))
+
+@bp.route('/<int:id>/undo', methods = ('POST',))
+def undo(id):
+    report = get_report(id)
+    if report['takenby'] is None or report['takenby'] !=g.user['id']:
+        abort(403)
+    db = get_db()
+    db.execute('UPDATE report SET takenby = NULL WHERE id = ?',(id,))
+    db.commit()
+    return redirect(url_for('reports.entries'))

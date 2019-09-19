@@ -55,21 +55,38 @@
   <p>Available reports</p>
   {% for post in postsnottaken %}
     <li class="list-group-item">
+      <div class="row">
+        <div class="col-10">
+        <p>Type: {{ post['type'] }}. Location: {{post['area']}}. Details: {{post['mulf']}}. Available to take. </p>
+        </div>
+        <div class="col">
       <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
-      <label>{{ post['type'] }} in {{post['area']}} more specificly: {{post['mulf']}}. Available to take. </label>
       <input type="submit" class="btn btn-primary" value="Take">
       </form>
+      </div>
+      </div>
     </li>
   {% endfor %}
   <p>My reports</p>
   {% for post in poststaken %}
     <li class="list-group-item">
-      <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
-      <label>{{ post['type'] }} in {{post['area']}} more specificly: {{post['mulf']}} taken by: {{post['username']}}</label>
+      <div class="row">
+        <div class="col-8">
+      <p>Type: {{ post['type'] }}. Location: {{post['area']}}. Details: {{post['mulf']}}. Taken by: {{post['username']}}</p>
+      </div>
       {% if post['takenby'] == g.user['id'] %}
+      <div class="col-2">
+      <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
       <input type="submit" class="btn btn-danger" value="Delete">
-      {% endif %}
       </form>
+      </div>
+      <div class="col-2">
+      <form method="post" action="{{url_for('reports.undo', id = post['id'])}}">
+      <input type="submit" class="btn btn-info" value="Undo">
+      </form>
+      </div>
+      {% endif %}
+      </div>
     </li>
   {% endfor %}
   </ul>
