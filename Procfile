@@ -1,1 +1,1 @@
-web: gunicorn loskalamos:create_app()
+web: gunicorn loskalamos:create_app
