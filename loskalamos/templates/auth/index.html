@@ -1,17 +1,20 @@
-{% extends "bootstrap/base.html" %}
+{% extends 'base.html' %}
 {% block title %}Login{% endblock %}
 {% block content %}
+
+<div class="container">
  {% for message in get_flashed_messages() %}
      <div class="alert alert-info">{{ message }}</div>
  {% endfor %}
 
 
-<span style="float:left">
-    <form class="text-center border border-light p-5" method="post" action="{{ url_for('reports.report') }}">
+  <div class="row">
+    <div class="col">
+    <form class="" method="post" action="{{ url_for('reports.report') }}">
           <p class="h4 mb-4">Report</p>
-        
-          <label for="exampleFormControlSelect1">Type select</label>
-          <select class="form-control" id="exampleFormControlSelect1" name="type">
+
+
+          <select class="form-control" id="exampleFormControlSelect1" name="type" placeholder="Type">
             <option>Water</option>
             <option>Road</option>
             <option>Electricity</option>
@@ -22,13 +25,19 @@
           <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Mulfunction" name="mulf" required>
          <button class="btn btn-info btn-block my-4" type="submit">Report</button>
     </form>
-</span>
-<span style="float:right">
-  <form class="text-center border border-light p-5" method="post">
+  </div>
+
+  <div class="col">
+  <form class="" method="post">
         <p class="h4 mb-4">Sign in</p>
         <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Username" name="username" required>
         <input type="password" id="defaultLoginFormPassword" class="form-control mb-4" placeholder="Password" name="password" required>
        <button class="btn btn-info btn-block my-4" type="submit">Sign in</button>
   </form>
-</span>
+  </div>
+  </div>
+</div>
+
+
+
 {% endblock %}
