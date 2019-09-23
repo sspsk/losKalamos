@@ -14,6 +14,7 @@ def report():
     area = request.form['area']
     mulf = request.form['mulf']
     db = get_db()
+    cur = db.cursor()
     error = None
 
     if not type:
@@ -24,65 +25,78 @@ def report():
         error = 'Mulfunction is required'
 
     if error is None:
-        db.execute('INSERT INTO report (type, area, mulf) VALUES (?, ?, ?)', (type, area, mulf))
+        cur.execute('INSERT INTO report (type, area, mulf) VALUES (%s, %s, %s)', (type, area, mulf))
         db.commit()
         flash('Successful report.')
 
     if error is not  None:
         flash(error)
+    cur.close()
     return redirect(url_for('auth.index'))
 
 @bp.route('/entries')
 def entries():
     db = get_db()
-    if g.user['username'] == "admin":
-        poststaken = db.execute('SELECT p.id, p.type, area, mulf, takenby, username FROM report p JOIN user u ON p.takenby = u.id ORDER BY created DESC').fetchall()
-        postsnottaken = db.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC').fetchall()
+    cur = db.cursor()
+    if g.user[1] == "admin":
+        cur.execute('SELECT p.id, p.type, area, mulf, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
+        poststaken = cur.fetchall()
+        cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC')
+        postsnottaken = cur.fetchall()
     else:
-        poststaken =  db.execute('SELECT p.id, p.type, area, mulf, takenby, username FROM report p JOIN user u ON p.takenby = u.id  WHERE p.type = ? AND p.takenby = ? ORDER BY created DESC ',(g.user['type'], g.user['id'])).fetchall()
-        postsnottaken = db.execute('SELECT * FROM report WHERE takenby IS NULL AND type = ? ORDER BY created DESC',(g.user['type'], )).fetchall()
+        cur.execute('SELECT p.id, p.type, area, mulf, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.takenby = %s ORDER BY created DESC ',(g.user[3], g.user[0]))
+        poststaken = cur.fetchall()
+        cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s ORDER BY created DESC',(g.user[3], ))
+        postsnottaken = cur.fetchall()
+    cur.close()
     return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken )
 
 
 def get_report(id):
-    report = get_db().execute(
-        'SELECT * FROM report WHERE id = ?',
-        (id,)
-    ).fetchone()
+    cur = get_db().cursor()
+    cur.execute('SELECT * FROM report WHERE id = %s',(id,))
+    report = cur.fetchone()
 
     if report is None:
         abort(404, "Post id {0} doesn't exist.".format(id))
 
 
-
+    cur.close()
     return report
 
 @bp.route('/<int:id>/take', methods = ('POST',))
 def take(id):
     db = get_db()
+    cur = db.cursor()
     report = get_report(id)
-    if report['takenby'] is not None:
+    if report[5] is not None:
         abort(403,"Already taken.")
-    db.execute('UPDATE report SET takenby = ? WHERE id = ?',(g.user['id'],id))
+    cur.execute('UPDATE report SET takenby = %s WHERE id = %s',(g.user[0],id))
+    cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
 
 @bp.route('/<int:id>/delete', methods = ('POST',))
 def delete(id):
     report = get_report(id)
-    if report['takenby'] is None or report['takenby'] !=g.user['id']:
+    if report[5] is None or report[5] !=g.user[0]:
         abort(403)
     db = get_db()
-    db.execute('DELETE FROM report WHERE id = ?',(id, ))
+    cur = db.cursor()
+    cur.execute('DELETE FROM report WHERE id = %s',(id, ))
+    cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
 
 @bp.route('/<int:id>/undo', methods = ('POST',))
 def undo(id):
     report = get_report(id)
-    if report['takenby'] is None or report['takenby'] !=g.user['id']:
+    if report[5] is None or report[5] !=g.user[0]:
         abort(403)
     db = get_db()
-    db.execute('UPDATE report SET takenby = NULL WHERE id = ?',(id,))
+    cur = db.cursor()
+    print("pass")
+    cur.execute('UPDATE report SET takenby = NULL WHERE id = %s',(id,))
+    cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
