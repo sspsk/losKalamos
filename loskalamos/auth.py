@@ -1,5 +1,5 @@
 import functools
-
+import psycopg2.extras
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -48,7 +48,7 @@ def index():
         password = request.form['password']
 
         db = get_db()
-        cur = db.cursor()
+        cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
         error = None
         cur.execute('SELECT * FROM technician WHERE username = %s', (username,))
         user = cur.fetchone()
@@ -56,12 +56,12 @@ def index():
 
         if user is None:
             error = 'Incorrect username.'
-        elif not check_password_hash(user[2], password):
+        elif not check_password_hash(user['password'], password):
             error = 'Incorrect password.'
 
         if error is None:
             session.clear()
-            session['user_id'] = user[0]
+            session['user_id'] = user['id']
             return redirect(url_for('reports.entries'))
 
         flash(error)
@@ -71,7 +71,7 @@ def index():
 @bp.before_app_request
 def load_logged_in_user():
     user_id = session.get('user_id')
-    cur = get_db().cursor()
+    cur = get_db().cursor(cursor_factory = psycopg2.extras.DictCursor)
     if user_id is None:
         g.user = None
     else:

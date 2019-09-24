@@ -8,7 +8,7 @@
 
 <ul class="nav">
     <li class="nav-item">
-    <a class="nav-link" >Signed in as {{ g.user[1]}}</a>
+    <a class="nav-link" >Signed in as {{ g.user['username']}}</a>
    </li>
    <li class="nav-item">
     <a class="nav-link" href="{{url_for('auth.logout')}}">Logout</a>
@@ -20,7 +20,7 @@
   <div class="alert alert-info" role="alert">{{ message }}</div>
 
 {% endfor %}
-  {% if g.user[1] == "admin" %}
+  {% if g.user['type'] == "admin" %}
   <div class="row justify-content-center">
   <div class="col-6 ">
     <form method="post" action="{{url_for('auth.register')}}">
@@ -39,7 +39,7 @@
          <option>Water</option>
          <option>Road</option>
          <option>Electricity</option>
-         <option>Other</option>
+         <option>admin</option>
       </select>
       </div>
       <div class="form-group">
@@ -57,10 +57,10 @@
     <li class="list-group-item">
       <div class="row">
         <div class="col-10">
-        <p>Type: {{ post[2] }}. Location: {{post[4]}}. Details: {{post[3]}}. Available to take. </p>
+        <p>Type: {{ post['type'] }}. Location: {{post['area']}}. Details: {{post['mulf']}}. Available to take. </p>
         </div>
         <div class="col">
-      <form method="post" action="{{url_for('reports.take', id = post[0])}}">
+      <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
       <input type="submit" class="btn btn-primary" value="Take">
       </form>
       </div>
@@ -72,16 +72,16 @@
     <li class="list-group-item">
       <div class="row">
         <div class="col-8">
-      <p>Type: {{ post[1] }}. Location: {{post[2]}}. Details: {{post[3]}}. Taken by: {{post[5]}}</p>
+      <p>Type: {{ post['type'] }}. Location: {{post['area']}}. Details: {{post['mulf']}}. Taken by: {{post['username']}}</p>
       </div>
-      {% if post[4] == g.user[0] %}
+      {% if post['takenby'] == g.user['id'] %}
       <div class="col-2">
-      <form method="post" action="{{url_for('reports.delete', id = post[0])}}">
+      <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
       <input type="submit" class="btn btn-danger" value="Delete">
       </form>
       </div>
       <div class="col-2">
-      <form method="post" action="{{url_for('reports.undo', id = post[0])}}">
+      <form method="post" action="{{url_for('reports.undo', id = post['id'])}}">
       <input type="submit" class="btn btn-info" value="Undo">
       </form>
       </div>

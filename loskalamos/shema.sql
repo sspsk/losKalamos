@@ -16,3 +16,15 @@ CREATE TABLE report (
   area TEXT NOT NULL,
   takenby INTEGER
 );
+
+CREATE TABLE region (
+  id SERIAL,
+  name TEXT NOT NULL
+
+);
+
+CREATE TABLE area (
+  id SERIAL,
+  name TEXT NOT NULL,
+  region_id INTEGER
+);
