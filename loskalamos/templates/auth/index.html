@@ -24,11 +24,28 @@
           </select>
           </div>
            <div class="form-group">
-          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Area" name="area" required>
+             <select class="form-control"  name="region" >
+               {% for region in regions %}
+               <option>{{region['name']}}</option>
+               {%endfor%}
+             </select>
           </div>
+          <div class="form-group">
+            <select class="form-control"  name="area" >
+              {% for area in areas %}
+              <option>{{area['name']}}</option>
+              {%endfor%}
+            </select>
+         </div>
            <div class="form-group">
-          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Mulfunction" name="mulf" required>
+          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Description" name="description" required>
           </div>
+          <div class="form-group">
+         <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Contact name" name="contact_name" >
+         </div>
+         <div class="form-group">
+        <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Contact phone" name="contact_phone" >
+        </div>
            <div class="form-group">
            <button class="btn btn-info btn-block my-4" type="submit">Report</button>
          </div>
@@ -37,7 +54,15 @@
 
     </form>
   </div>
-
+  {% if g.user %}
+  <div class="col">
+  <form class="" method="get" action="{{url_for('reports.entries')}}">
+      <div class="form-group">
+       <button class="btn btn-info btn-block my-4" type="submit">Sign in</button>
+      </div>
+  </form>
+  </div>
+  {% else %}
   <div class="col">
   <form class="" method="post">
       <div class="form-group">
@@ -54,6 +79,7 @@
          </div>
   </form>
   </div>
+  {% endif %}
   </div>
 </div>
 

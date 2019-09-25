@@ -12,22 +12,27 @@ def report():
 
     type = request.form['type']
     area = request.form['area']
-    mulf = request.form['mulf']
+    description = request.form['description']
+    region = request.form['region']
+    contact_name = request.form['contact_name']
+    contact_phone = request.form['contact_phone']
     db = get_db()
-    cur = db.cursor()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
     error = None
 
     if not type:
         error = 'Type is required.'
     elif not area:
         error = 'Area is required.'
-    elif not mulf:
-        error = 'Mulfunction is required'
-
+    elif not description:
+        error = 'Description is required'
+    elif not region:
+        error = 'Region is required.'
     if error is None:
-        cur.execute('INSERT INTO report (type, area, mulf) VALUES (%s, %s, %s)', (type, area, mulf))
+        cur.execute('INSERT INTO report (type, area, region, description, contact_name, contact_phone) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, contact_name, contact_phone))
+        id = cur.fetchone()['id']
         db.commit()
-        flash('Successful report.')
+        flash('Thank you {0}. Successful report. Id of report: {1}'.format(contact_name,id))
 
     if error is not  None:
         flash(error)
@@ -38,18 +43,20 @@ def report():
 def entries():
     db = get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM region')
+    regions = cur.fetchall()
     if g.user['type'] == "admin":
-        cur.execute('SELECT p.id, p.type, area, mulf, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
+        cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
         poststaken = cur.fetchall()
         cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC')
         postsnottaken = cur.fetchall()
     else:
-        cur.execute('SELECT p.id, p.type, area, mulf, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.takenby = %s ORDER BY created DESC ',(g.user['type'], g.user['id']))
+        cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created DESC ',(g.user['type'], g.user['region'], g.user['id']))
         poststaken = cur.fetchall()
-        cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s ORDER BY created DESC',(g.user['type'], ))
+        cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created DESC',(g.user['type'], g.user['region']))
         postsnottaken = cur.fetchall()
     cur.close()
-    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken )
+    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions)
 
 
 def get_report(id):

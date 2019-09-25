@@ -14,7 +14,7 @@ def get_connection():
     return conn
 def get_db():
     if 'db' not in g:
-        g.db = get_connection() #database connectio
+        g.db = get_connection() #database connection
     return g.db
 
 def close_db(e=None):
@@ -36,12 +36,12 @@ def init_db():
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    init_db()
+    #init_db()
     password = input('Set admin password: ')
     password  = generate_password_hash(password)
     db = get_db()
     cur = db.cursor()
-    cur.execute('INSERT INTO technician (username, password, type) VALUES (%s, %s, %s)',('admin', password, 'admin'))
+    cur.execute('INSERT INTO technician (username, password, type, region) VALUES (%s, %s, %s, %s)',('admin', password, 'admin', 'admin'))
     cur.close()
     db.commit()
     click.echo('Initialized the database and set admin privilages.')
