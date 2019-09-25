@@ -45,11 +45,18 @@ def entries():
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
     cur.execute('SELECT * FROM region')
     regions = cur.fetchall()
+    report_id = request.args.get('report_id')
     if g.user['type'] == "admin":
-        cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
-        poststaken = cur.fetchall()
-        cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC')
-        postsnottaken = cur.fetchall()
+        if report_id is None:
+            cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
+            poststaken = cur.fetchall()
+            cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC')
+            postsnottaken = cur.fetchall()
+        else:
+            cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
+            poststaken = cur.fetchall()
+            cur.execute('SELECT * FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
+            postsnottaken = cur.fetchall()
     else:
         cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created DESC ',(g.user['type'], g.user['region'], g.user['id']))
         poststaken = cur.fetchall()
