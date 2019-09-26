@@ -110,7 +110,7 @@
     <li class="list-group-item">
       <div class="row">
         <div class="col-10">
-        <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}. Address: {{post['address']}}.  Details: {{post['description']}}. Available to take. </p>
+        <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}. Address: {{post['address']}}. Details: {{post['description']}}. Available to take. </p>
         </div>
         <div class="col">
       <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
@@ -125,7 +125,7 @@
     <li class="list-group-item">
       <div class="row">
         <div class="col-8">
-      <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}  Details: {{post['description']}}. Taken by: {{post['username']}}</p>
+      <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}. Address: {{post['address']}}. Details: {{post['description']}}. Taken by: {{post['username']}}</p>
       </div>
       {% if post['takenby'] == g.user['id'] %}
       <div class="col-2">

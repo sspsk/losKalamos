@@ -1,11 +1,25 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response
 
 from werkzeug.exceptions import abort
 
 from loskalamos.db import get_db
 import psycopg2.extras
+import json
 
 bp = Blueprint('reports',__name__)
+
+@bp.route('/getareas',methods = ('GET',))
+def getareas():
+    region = request.args.get('region')
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM region WHERE name = %s',(region,))
+    region_id = cur.fetchone()[0]
+    cur.execute('SELECT * FROM area WHERE region_id = %s',(region_id,))
+    areas = cur.fetchall()
+    return Response(json.dumps(areas), mimetype='application/json')
+
+
 
 @bp.route('/report', methods = ('POST', ))
 def report():
@@ -51,17 +65,17 @@ def entries():
     report_id = request.args.get('report_id')
     if g.user['type'] == "admin":
         if report_id is None:
-            cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
             poststaken = cur.fetchall()
             cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC')
             postsnottaken = cur.fetchall()
         else:
-            cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
             poststaken = cur.fetchall()
             cur.execute('SELECT * FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
             postsnottaken = cur.fetchall()
     else:
-        cur.execute('SELECT p.id, p.type, area, p.region, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created DESC ',(g.user['type'], g.user['region'], g.user['id']))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created DESC ',(g.user['type'], g.user['region'], g.user['id']))
         poststaken = cur.fetchall()
         cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created DESC',(g.user['type'], g.user['region']))
         postsnottaken = cur.fetchall()

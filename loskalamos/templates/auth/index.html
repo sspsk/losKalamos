@@ -1,5 +1,23 @@
 {% extends 'base.html' %}
 {% block title %}Login{% endblock %}
+{% block myscript %}
+
+<script>
+  $(document).ready(function(){
+    $("#regionSelector").change(function(){
+      $.getJSON($SCRIPT_ROOT + '/getareas',{region : $(this).val()},function(data){
+          $("#areaSelector").empty();
+          $("#areaSelector").append('<option selected disabled>Area</option>');
+        for(let i =0;i<data.length;i++){
+          $("#areaSelector").append('<option>'+data[i][1]+'</option>');
+          console.log('<option>'+data[i][1]+'</option>');
+        }
+      });
+      //kane post request me to $(this).val() kai append to html sto select kato
+    });
+  });
+</script>
+{% endblock %}
 {% block content %}
 
 <div class="container">
@@ -24,17 +42,16 @@
           </select>
           </div>
            <div class="form-group">
-             <select class="form-control"  name="region" >
+             <select id="regionSelector" class="form-control"  name="region" >
+               <option selected disabled>Region</option>
                {% for region in regions %}
                <option>{{region['name']}}</option>
                {%endfor%}
              </select>
           </div>
           <div class="form-group">
-            <select class="form-control"  name="area" >
-              {% for area in areas %}
-              <option>{{area['name']}}</option>
-              {%endfor%}
+            <select id="areaSelector" class="form-control"  name="area" >
+              <option selected disabled>Area</option>
             </select>
          </div>
           <div class="form-group">
