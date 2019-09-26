@@ -18,6 +18,7 @@ CREATE TABLE report (
   description TEXT NOT NULL,
   region TEXT NOT NULL,
   area TEXT NOT NULL,
+  address TEXT NOT NULL,
   takenby INTEGER,
   contact_name TEXT,
   contact_phone TEXT

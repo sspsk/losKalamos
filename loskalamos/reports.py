@@ -14,6 +14,7 @@ def report():
     area = request.form['area']
     description = request.form['description']
     region = request.form['region']
+    address = request.form['address']
     contact_name = request.form['contact_name']
     contact_phone = request.form['contact_phone']
     db = get_db()
@@ -28,8 +29,10 @@ def report():
         error = 'Description is required'
     elif not region:
         error = 'Region is required.'
+    elif not address:
+        error = 'Address is required.'
     if error is None:
-        cur.execute('INSERT INTO report (type, area, region, description, contact_name, contact_phone) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, contact_name, contact_phone))
+        cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone))
         id = cur.fetchone()['id']
         db.commit()
         flash('Thank you {0}. Successful report. Id of report: {1}'.format(contact_name,id))
