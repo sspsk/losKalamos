@@ -1,5 +1,30 @@
 {% extends '/base.html' %}
 {% block title %} entries {% endblock %}
+{% block myscript %}
+<script >
+  var latest;
+  $(document).ready(function(){
+    latest = {{latest_id[0]}};
+    longPoll()
+  });
+  function longPoll(){
+    $.ajax({
+        url: $SCRIPT_ROOT+"/entriesUpdate?last="+latest,
+        success: function(data){
+            for(let i =0;i<data.length;i++){
+              $("#nottaken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[i][1]+'. Region: '+data[i][2]+'. Area: '+data[i][3]+'. Address: '+data[i][4]+'. Details: '+data[i][5]+'. Available to take. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[i][0]+'/take"><input type="submit" class="btn btn-primary" value="Take"></form></div></div></li>');
+            }
+            latest = data[data.length-1][0];
+        },
+        type: "GET",
+        dataType: "json",
+        complete: longPoll,
+        timeout: 60000 // timeout every one minute
+    });
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
 
@@ -34,8 +59,8 @@
      <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Password" name="password" required>
      </div>
      <div class="form-group text-center">
-     <label for="type">Type of work</label>
      <select class="form-control"  name="type">
+       <option selected disabled>Type</option>
          <option>Water</option>
          <option>Road</option>
          <option>Electricity</option>
@@ -44,6 +69,7 @@
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
+        <option selected disabled>Region</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
@@ -71,6 +97,7 @@
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
+        <option selected disabled>Region</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
@@ -104,7 +131,7 @@
   {% endif %}
 
 
-  <ul class="list=group">
+  <ul class="list=group" id="nottaken">
   <p>Available reports</p>
   {% for post in postsnottaken %}
     <li class="list-group-item">
@@ -120,6 +147,8 @@
       </div>
     </li>
   {% endfor %}
+  </ul>
+  <ul class="list=group">
   <p>My reports</p>
   {% for post in poststaken %}
     <li class="list-group-item">

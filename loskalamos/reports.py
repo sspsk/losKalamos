@@ -79,8 +79,10 @@ def entries():
         poststaken = cur.fetchall()
         cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created DESC',(g.user['type'], g.user['region']))
         postsnottaken = cur.fetchall()
+    cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
+    latest_id = cur.fetchone()
     cur.close()
-    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions)
+    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions,latest_id = latest_id)
 
 
 def get_report(id):
@@ -131,3 +133,17 @@ def undo(id):
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
+
+@bp.route('/entriesUpdate')
+def entriesUpdate():
+    last = request.args.get('last')
+    db= get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
+    latest_id = cur.fetchone()[0]
+    while(int(latest_id) <= int(last)):
+        cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
+        latest_id = cur.fetchone()[0]
+    cur.execute('SELECT id, type, region, area, address, description FROM report WHERE id > %s ORDER BY id DESC',(last, ))
+    res = cur.fetchall()
+    return  Response(json.dumps(res), mimetype='application/json')
