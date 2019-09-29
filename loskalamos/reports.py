@@ -5,7 +5,7 @@ from werkzeug.exceptions import abort
 from loskalamos.db import get_db
 import psycopg2.extras
 import json
-
+import time
 bp = Blueprint('reports',__name__)
 
 @bp.route('/getareas',methods = ('GET',))
@@ -65,9 +65,9 @@ def entries():
     report_id = request.args.get('report_id')
     if g.user['type'] == "admin":
         if report_id is None:
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created DESC')
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created ASC')
             poststaken = cur.fetchall()
-            cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created DESC')
+            cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created ASC')
             postsnottaken = cur.fetchall()
         else:
             cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
@@ -75,14 +75,14 @@ def entries():
             cur.execute('SELECT * FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
             postsnottaken = cur.fetchall()
     else:
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created DESC ',(g.user['type'], g.user['region'], g.user['id']))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id']))
         poststaken = cur.fetchall()
-        cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created DESC',(g.user['type'], g.user['region']))
+        cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created ASC',(g.user['type'], g.user['region']))
         postsnottaken = cur.fetchall()
     cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
     latest_id = cur.fetchone()
     cur.close()
-    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions,latest_id = latest_id)
+    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions,latest_id = latest_id )
 
 
 def get_report(id):
@@ -136,14 +136,24 @@ def undo(id):
 
 @bp.route('/entriesUpdate')
 def entriesUpdate():
+    print("called update")
     last = request.args.get('last')
     db= get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
     cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
     latest_id = cur.fetchone()[0]
+    hits = 1
     while(int(latest_id) <= int(last)):
+        time.sleep(1)
         cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
         latest_id = cur.fetchone()[0]
-    cur.execute('SELECT id, type, region, area, address, description FROM report WHERE id > %s ORDER BY id DESC',(last, ))
+        hits = hits + 1
+        if(hits >= 120):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client )
+            return Response(json.dumps(None), mimetype='application/json')
+    if g.user['type'] == "admin":
+        cur.execute('SELECT id, type, region, area, address, description FROM report WHERE id > %s ',(last, ))
+    else :
+        cur.execute('SELECT id, type, region, area, address, description FROM report WHERE id > %s  AND type = %s AND region = %s ORDER BY id DESC',(last,g.user['type'], g.user['region'] ))
     res = cur.fetchall()
+    cur.close()
     return  Response(json.dumps(res), mimetype='application/json')

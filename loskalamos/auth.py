@@ -128,6 +128,7 @@ def load_logged_in_user():
     else:
         cur.execute('SELECT * FROM technician WHERE id = %s', (user_id,))
         g.user = cur.fetchone()
+    print("inside before_app_request")
     cur.close()
 
 @bp.route('/logout')

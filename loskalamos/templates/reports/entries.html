@@ -2,26 +2,42 @@
 {% block title %} entries {% endblock %}
 {% block myscript %}
 <script >
+
   var latest;
+
   $(document).ready(function(){
     latest = {{latest_id[0]}};
-    longPoll()
+
+    longPoll();
   });
+
   function longPoll(){
     $.ajax({
-        url: $SCRIPT_ROOT+"/entriesUpdate?last="+latest,
+        url: $SCRIPT_ROOT+"/entriesUpdate",
+        data : {
+          last : latest
+        },
         success: function(data){
+          console.log(data);
+          if(data != null) {
+          if(data[0] != null){
             for(let i =0;i<data.length;i++){
               $("#nottaken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[i][1]+'. Region: '+data[i][2]+'. Area: '+data[i][3]+'. Address: '+data[i][4]+'. Details: '+data[i][5]+'. Available to take. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[i][0]+'/take"><input type="submit" class="btn btn-primary" value="Take"></form></div></div></li>');
-            }
-            latest = data[data.length-1][0];
+                }
+            latest = data[0][0];
+          }
+        }
+          longPoll();
+        },
+        error: function(jqXhr, textStatus, errorMessage){
+          console.log(errorMessage);
+          longPoll();
         },
         type: "GET",
         dataType: "json",
-        complete: longPoll,
-        timeout: 60000 // timeout every one minute
+        timeout: 120000 // ti1meout every 2 minutes,for safety reasons(request missing)
     });
-}
+  }
 </script>
 {% endblock %}
 
@@ -141,7 +157,7 @@
         </div>
         <div class="col">
       <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
-      <input type="submit" class="btn btn-primary" value="Take">
+      <input id="take"type="submit" class="btn btn-primary" value="Take">
       </form>
       </div>
       </div>

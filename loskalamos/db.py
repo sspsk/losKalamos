@@ -36,7 +36,7 @@ def init_db():
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    #init_db()
+    #init_db() den 8elw na xalasei olo to shema,an 8elw to kanw uncomment
     password = input('Set admin password: ')
     password  = generate_password_hash(password)
     db = get_db()
