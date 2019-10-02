@@ -28,7 +28,7 @@
                  <div class="col-8">
                  <p>Type: ${data[0][i][1]}. Region: ${data[0][i][3]}. Area: ${data[0][i][2]}. Address: ${data[0][i][4]}. Details: ${data[0][i][5]}. Taken by: ${data[0][i][7]}</p>
                  </div>`;
-                 
+
                  if(data[2] == data[0][i][6]){
                    console.log(data[3] == data[0][i][6])
                    html += `
@@ -53,10 +53,30 @@
             }
             if(data[1] != null){
               for(let i =0;i<data[1].length;i++){
-               $("#nottaken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[1][i][1]+'. Region: '+data[1][i][3]+'. Area: '+data[1][i][2]+'. Address: '+data[1][i][4]+'. Details: '+data[1][i][5]+'. Available to take. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[1][i][0]+'/take"><input type="submit" class="btn btn-primary" value="Take"></form></div></div></li>');
+                var html = `
+                <li class="list-group-item">
+                  <div class="row">
+                  <div class="col-10">
+                  <p>Type: ${data[1][i][1]}. Region: ${data[1][i][3]}. Area: ${data[1][i][2]}. Address: ${data[1][i][4]}. Details: ${data[1][i][5]}. Available to take</p>
+                  </div>`;
+
+                  html += `
+                  <div class="col-2">
+                  <form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
+                  <input type="submit" class="btn btn-primary" value="Take">
+                  </form>
+                  </div>
+                  `;
+
+                  html += `
+                  </div>
+                  </li>
+                  `;
+                $("#nottaken").append(html);
+                  }
                  }
             }
-          }
+
 
         },
         error: function(jqXhr, textStatus, errorMessage){
@@ -77,12 +97,12 @@
 <div class="container">
 
 
-<ul class="nav">
+<ul class="nav bg-light rounded" id="myNav">
     <li class="nav-item">
-    <a class="nav-link" >Signed in as {{ g.user['username']}}</a>
+    <a class="nav-link" >Είστε συνδεδεμένος ως {{ g.user['username']}}</a>
    </li>
    <li class="nav-item">
-    <a class="nav-link" href="{{url_for('auth.logout')}}">Logout</a>
+    <a class="nav-link" href="{{url_for('auth.logout')}}">Αποσύνδεση</a>
   </li>
 </ul>
 
@@ -93,29 +113,29 @@
 {% endfor %}
   {% if g.user['type'] == "admin" %}
   <div class="row justify-content-center">
-  <div class="col-6 ">
-    <form method="post" action="{{url_for('auth.register')}}">
+  <div class="col-5 bg-light rounded" id="entriesForm">
+    <form  class="bg-light rounded"method="post" action="{{url_for('auth.register')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Register a technician.</p>
+        <p class="h4 mb-4 text-center" >Δημιουργεια τεχνικου</p>
       </div>
       <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Username" name="username" required>
+     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Συνθηματικο" name="username" required>
      </div>
      <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Password" name="password" required>
+     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Κωδικός" name="password" required>
      </div>
      <div class="form-group text-center">
      <select class="form-control"  name="type">
-       <option selected disabled>Type</option>
-         <option>Water</option>
-         <option>Road</option>
-         <option>Electricity</option>
+       <option selected disabled>Είδος εργασίας</option>
+         <option>Υδρευση</option>
+         <option>Οδόστρωμα</option>
+         <option>Ηλεκτροδότηση</option>
          <option>admin</option>
       </select>
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
-        <option selected disabled>Region</option>
+        <option selected disabled>Περιοχη</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
@@ -123,57 +143,65 @@
       </select>
       </div>
       <div class="form-group">
-     <input type="submit" class="btn btn-info btn-block my-4 primary" value="Register">
+     <input type="submit" class="btn btn-info btn-block my-4 primary" value="Δημιουργεια">
      </div>
     </form>
-    <form method="post" action="{{url_for('auth.addregion')}}">
+    </div>
+    <div class="col-3 bg-light rounded" id="entriesForm">
+    <form  class="bg-light rounded" method="post" action="{{url_for('auth.addregion')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Add a region.</p>
+        <p class="h4 mb-4 text-center" >Πρόσθεση περιοχης</p>
       </div>
       <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Region" name="region" required>
+     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Περιοχη" name="region" required>
      </div>
      <div class="form-group">
-    <input type="submit" class="btn btn-info btn-block my-4 primary" value="Add">
+    <input type="submit" class="btn btn-info btn-block my-4 primary" value="Προσθεση">
     </div>
     </form>
-    <form method="post" action="{{url_for('auth.addarea')}}">
+    </div>
+    <div class="col-3 bg-light rounded" id="entriesForm">
+    <form  class="bg-light rounded" method="post" action="{{url_for('auth.addarea')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Add an area.</p>
+        <p class="h4 mb-4 text-center" >Πρόσθεση υποπεριοχής</p>
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
-        <option selected disabled>Region</option>
+        <option selected disabled>Περιοχη</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
       </select>
       </div>
       <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Area" name="area" required>
+     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Υποπεριοχη" name="area" required>
      </div>
      <div class="form-group">
-    <input type="submit" class="btn btn-info btn-block my-4 primary" value="Add">
+    <input type="submit" class="btn btn-info btn-block my-4 primary" value="Πρόσθεση">
     </div>
     </form>
-    <form method="get" >
+    </div>
+    </div>
+    <div class="row d-flex justify-content-center bg-light rounded" id="entriesForm">
+      <form class="form-inline" method="get" id="entriesForm">
+        <div class="form-group">
+          <label for="exampleInputName2" id="searchLabel">Id</label>
+          <input type="text" class="form-control" id="exampleInputName2" placeholder="Report id" name="report_id" required>
+        </div>
+        <div class="form-group">
+          <input type="submit" class="btn btn-info btn-block my-4 primary" value="Αναζητηση">
+       </div>
+      </form>
+
+    <form  class="form-inline " method="get" id="entriesForm">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Search by id</p>
-      </div>
-      <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Report id" name="report_id" required>
+        <input type="submit" class="btn btn-info btn-block my-4 primary" value="Προβολή όλων">
      </div>
-     <div class="form-group">
-    <input type="submit" class="btn btn-info btn-block my-4 primary" value="Search">
-    </div>
     </form>
-    <form method="get" >
-      <div class="form-group">
-        <input type="submit" class="btn btn-info btn-block my-4 primary" value="Show all">
-     </div>
-    </form>
+
     </div>
-    </div>
+
+
   {% endif %}
 
 
