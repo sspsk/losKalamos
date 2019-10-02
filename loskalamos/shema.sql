@@ -43,4 +43,5 @@ CREATE TABLE update_check(
   check_bit INTEGER NOT NULL,
   PRIMARY KEY (username)
 );
-INSERT INTO update_check check_bit VALUES (0);
+
+INSERT INTO update_check (username,check_bit) VALUES ('sspsk',1);

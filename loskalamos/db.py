@@ -10,7 +10,7 @@ def get_connection():
     conn = None
     print("Connecting to the database.")
 
-    conn = psycopg2.connect(host="localhost",database="appdb",user="postgres",password="Sotiris98")
+    conn = psycopg2.connect(host="ec2-174-129-231-116.compute-1.amazonaws.com",database="dbf4chu5k1tm35",user="siumgtzcvvnqrx",password="22d0da24520f7ac1b9b2b7636b3e09a0f0f5b8693ef28eba5afd8bb03288f3c3")
     return conn
 def get_db():
     if 'db' not in g:
@@ -36,7 +36,7 @@ def init_db():
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    #init_db() den 8elw na xalasei olo to shema,an 8elw to kanw uncomment
+    init_db() 
     password = input('Set admin password: ')
     password  = generate_password_hash(password)
     db = get_db()
