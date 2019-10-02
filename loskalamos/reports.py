@@ -48,6 +48,7 @@ def report():
     if error is None:
         cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone))
         id = cur.fetchone()['id']
+        cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
         db.commit()
         flash('Thank you {0}. Successful report. Id of report: {1}'.format(contact_name,id))
 
@@ -104,7 +105,10 @@ def take(id):
     report = get_report(id)
     if report['takenby'] is not None:
         abort(403,"Already taken.")
+    if report['type'] != g.user['type'] and g.user['type'] != "admin":
+        abort(403,"Not the same type of work")
     cur.execute('UPDATE report SET takenby = %s WHERE id = %s',(g.user['id'],id))
+    cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -114,9 +118,12 @@ def delete(id):
     report = get_report(id)
     if report['takenby'] is None or report['takenby'] !=g.user['id']:
         abort(403)
+    if report['type'] != g.user['type'] and g.user['type'] != "admin":
+        abort(403,"Not the same type of work")
     db = get_db()
     cur = db.cursor()
     cur.execute('DELETE FROM report WHERE id = %s',(id, ))
+    cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -126,10 +133,13 @@ def undo(id):
     report = get_report(id)
     if report['takenby'] is None or report['takenby'] !=g.user['id']:
         abort(403)
+    if report['type'] != g.user['type'] and g.user['type'] != "admin":
+        abort(403,"Not the same type of work")
     db = get_db()
     cur = db.cursor()
     print("pass")
     cur.execute('UPDATE report SET takenby = NULL WHERE id = %s',(id,))
+    cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -137,23 +147,33 @@ def undo(id):
 @bp.route('/entriesUpdate')
 def entriesUpdate():
     print("called update")
-    last = request.args.get('last')
-    db= get_db()
+    db=get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
-    cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
-    latest_id = cur.fetchone()[0]
+    cur.execute('SELECT * FROM update_check ORDER BY id ASC')
+    up_to_date = cur.fetchone()['check_bit']
     hits = 1
-    while(int(latest_id) <= int(last)):
+    while(up_to_date == 0):
         time.sleep(1)
-        cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
-        latest_id = cur.fetchone()[0]
+        cur.execute('SELECT * FROM update_check ORDER BY id ASC')
+        up_to_date = cur.fetchone()['check_bit']
         hits = hits + 1
         if(hits >= 120):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client )
             return Response(json.dumps(None), mimetype='application/json')
     if g.user['type'] == "admin":
-        cur.execute('SELECT id, type, region, area, address, description FROM report WHERE id > %s ',(last, ))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created ASC')
+        poststaken = cur.fetchall()
+        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL ORDER BY created ASC')
+        postsnottaken = cur.fetchall()
     else :
-        cur.execute('SELECT id, type, region, area, address, description FROM report WHERE id > %s  AND type = %s AND region = %s ORDER BY id DESC',(last,g.user['type'], g.user['region'] ))
-    res = cur.fetchall()
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id']))
+        poststaken = cur.fetchall()
+        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created ASC',(g.user['type'], g.user['region']))
+        postsnottaken = cur.fetchall()
+    if not poststaken:
+        poststaken = None
+    if not postsnottaken:
+        postsnottaken = None
+    cur.execute('UPDATE update_check SET check_bit = 0 WHERE id = 1')
+    db.commit()
     cur.close()
-    return  Response(json.dumps(res), mimetype='application/json')
+    return  Response(json.dumps([poststaken,postsnottaken]), mimetype='application/json')

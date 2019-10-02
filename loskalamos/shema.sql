@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS technician;
 DROP TABLE IF EXISTS report;
 DROP TABLE IF EXISTS region;
 DROP TABLE IF EXISTS area;
+DROP TABLE IF EXISTS update_check;
 
 CREATE TABLE technician (
   id SERIAL,
@@ -36,3 +37,9 @@ CREATE TABLE area (
   region_id INTEGER NOT NULL,
   PRIMARY KEY (name, region_id)
 );
+
+CREATE TABLE update_check(
+  id SERIAL,
+  check_bit INTEGER NOT NULL
+);
+INSERT INTO update_check check_bit VALUES (0);

@@ -6,35 +6,37 @@
   var latest;
 
   $(document).ready(function(){
-    latest = {{latest_id[0]}};
-
     longPoll();
   });
 
   function longPoll(){
     $.ajax({
         url: $SCRIPT_ROOT+"/entriesUpdate",
-        data : {
-          last : latest
-        },
         success: function(data){
+          console.log("my data: ")
           console.log(data);
           if(data != null) {
-          if(data[0] != null){
-            for(let i =0;i<data.length;i++){
-              $("#nottaken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[i][1]+'. Region: '+data[i][2]+'. Area: '+data[i][3]+'. Address: '+data[i][4]+'. Details: '+data[i][5]+'. Available to take. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[i][0]+'/take"><input type="submit" class="btn btn-primary" value="Take"></form></div></div></li>');
-                }
-            latest = data[0][0];
+            $("#taken").empty();
+            $("#nottaken").empty();
+            if(data[0] != null){
+              for(let i =0;i<data[0].length;i++){
+               $("#taken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[0][i][1]+'. Region: '+data[0][i][3]+'. Area: '+data[0][i][2]+'. Address: '+data[0][i][4]+'. Details: '+data[0][i][5]+'. Taken by: '+data[0][i][7]+'. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[0][i][0]+'/delete"><input type="submit" class="btn btn-danger" value="Delete"></form><form method="post" action="'+$SCRIPT_ROOT+'/'+data[0][i][0]+'/undo"><input type="submit" class="btn btn-info" value="Undo"></form></div></div></li>');
+                 }
+            }
+            if(data[1] != null){
+              for(let i =0;i<data[1].length;i++){
+               $("#nottaken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[1][i][1]+'. Region: '+data[1][i][3]+'. Area: '+data[1][i][2]+'. Address: '+data[1][i][4]+'. Details: '+data[1][i][5]+'. Available to take. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[1][i][0]+'/take"><input type="submit" class="btn btn-primary" value="Take"></form></div></div></li>');
+                 }
+            }
           }
-        }
-          longPoll();
+
         },
         error: function(jqXhr, textStatus, errorMessage){
           console.log(errorMessage);
-          longPoll();
         },
         type: "GET",
         dataType: "json",
+        complete: longPoll ,
         timeout: 120000 // ti1meout every 2 minutes,for safety reasons(request missing)
     });
   }
@@ -164,12 +166,12 @@
     </li>
   {% endfor %}
   </ul>
-  <ul class="list=group">
+  <ul class="list=group" id="taken">
   <p>My reports</p>
   {% for post in poststaken %}
     <li class="list-group-item">
       <div class="row">
-        <div class="col-8">
+      <div class="col-8">
       <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}. Address: {{post['address']}}. Details: {{post['description']}}. Taken by: {{post['username']}}</p>
       </div>
       {% if post['takenby'] == g.user['id'] %}
