@@ -17,10 +17,38 @@
           console.log(data);
           if(data != null) {
             $("#taken").empty();
+            $("#taken").append("<p>Available reports</p>");
             $("#nottaken").empty();
+            $("#nottaken").append("<p>Taken reports</p>");
             if(data[0] != null){
               for(let i =0;i<data[0].length;i++){
-               $("#taken").append(' <li class="list-group-item"><div class="row"><div class="col-10"><p>Type: '+data[0][i][1]+'. Region: '+data[0][i][3]+'. Area: '+data[0][i][2]+'. Address: '+data[0][i][4]+'. Details: '+data[0][i][5]+'. Taken by: '+data[0][i][7]+'. </p></div><div class="col"><form method="post" action="'+$SCRIPT_ROOT+'/'+data[0][i][0]+'/delete"><input type="submit" class="btn btn-danger" value="Delete"></form><form method="post" action="'+$SCRIPT_ROOT+'/'+data[0][i][0]+'/undo"><input type="submit" class="btn btn-info" value="Undo"></form></div></div></li>');
+               var html = `
+               <li class="list-group-item">
+                 <div class="row">
+                 <div class="col-8">
+                 <p>Type: ${data[0][i][1]}. Region: ${data[0][i][3]}. Area: ${data[0][i][2]}. Address: ${data[0][i][4]}. Details: ${data[0][i][5]}. Taken by: ${data[0][i][7]}</p>
+                 </div>`;
+                 
+                 if(data[2] == data[0][i][6]){
+                   console.log(data[3] == data[0][i][6])
+                   html += `
+                   <div class="col-2">
+                   <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/delete"}">
+                   <input type="submit" class="btn btn-danger" value="Delete">
+                   </form>
+                   </div>
+                   <div class="col-2">
+                   <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
+                   <input type="submit" class="btn btn-info" value="Undo">
+                   </form>
+                   </div>
+                   `;
+                 }
+                 html += `
+                 </div>
+                 </li>
+                 `;
+               $("#taken").append(html);
                  }
             }
             if(data[1] != null){
@@ -167,7 +195,7 @@
   {% endfor %}
   </ul>
   <ul class="list=group" id="taken">
-  <p>My reports</p>
+  <p>Taken reports</p>
   {% for post in poststaken %}
     <li class="list-group-item">
       <div class="row">

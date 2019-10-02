@@ -48,7 +48,7 @@ def report():
     if error is None:
         cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone))
         id = cur.fetchone()['id']
-        cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
+        cur.execute('UPDATE update_check SET check_bit = 1')
         db.commit()
         flash('Thank you {0}. Successful report. Id of report: {1}'.format(contact_name,id))
 
@@ -80,10 +80,8 @@ def entries():
         poststaken = cur.fetchall()
         cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created ASC',(g.user['type'], g.user['region']))
         postsnottaken = cur.fetchall()
-    cur.execute('SELECT id FROM report ORDER BY id DESC LIMIT 1')
-    latest_id = cur.fetchone()
     cur.close()
-    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions,latest_id = latest_id )
+    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions )
 
 
 def get_report(id):
@@ -108,7 +106,7 @@ def take(id):
     if report['type'] != g.user['type'] and g.user['type'] != "admin":
         abort(403,"Not the same type of work")
     cur.execute('UPDATE report SET takenby = %s WHERE id = %s',(g.user['id'],id))
-    cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
+    cur.execute('UPDATE update_check SET check_bit = 1')
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -123,7 +121,7 @@ def delete(id):
     db = get_db()
     cur = db.cursor()
     cur.execute('DELETE FROM report WHERE id = %s',(id, ))
-    cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
+    cur.execute('UPDATE update_check SET check_bit = 1')
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -139,7 +137,7 @@ def undo(id):
     cur = db.cursor()
     print("pass")
     cur.execute('UPDATE report SET takenby = NULL WHERE id = %s',(id,))
-    cur.execute('UPDATE update_check SET check_bit = 1 WHERE id = 1')
+    cur.execute('UPDATE update_check SET check_bit = 1')
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -149,12 +147,12 @@ def entriesUpdate():
     print("called update")
     db=get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
-    cur.execute('SELECT * FROM update_check ORDER BY id ASC')
+    cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
     up_to_date = cur.fetchone()['check_bit']
     hits = 1
     while(up_to_date == 0):
         time.sleep(1)
-        cur.execute('SELECT * FROM update_check ORDER BY id ASC')
+        cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
         up_to_date = cur.fetchone()['check_bit']
         hits = hits + 1
         if(hits >= 120):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client )
@@ -173,7 +171,7 @@ def entriesUpdate():
         poststaken = None
     if not postsnottaken:
         postsnottaken = None
-    cur.execute('UPDATE update_check SET check_bit = 0 WHERE id = 1')
+    cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
     db.commit()
     cur.close()
-    return  Response(json.dumps([poststaken,postsnottaken]), mimetype='application/json')
+    return  Response(json.dumps([poststaken,postsnottaken,g.user['id']]), mimetype='application/json')

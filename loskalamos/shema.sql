@@ -39,7 +39,8 @@ CREATE TABLE area (
 );
 
 CREATE TABLE update_check(
-  id SERIAL,
-  check_bit INTEGER NOT NULL
+  username TEXT NOT NULL,
+  check_bit INTEGER NOT NULL,
+  PRIMARY KEY (username)
 );
 INSERT INTO update_check check_bit VALUES (0);
