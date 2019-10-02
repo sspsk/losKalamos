@@ -7,7 +7,7 @@
     $("#regionSelector").change(function(){
       $.getJSON($SCRIPT_ROOT + '/getareas',{region : $(this).val()},function(data){
           $("#areaSelector").empty();
-          $("#areaSelector").append('<option selected disabled>Area</option>');
+          $("#areaSelector").append('<option selected disabled>Υποπεριοχη</option>');
         for(let i =0;i<data.length;i++){
           $("#areaSelector").append('<option>'+data[i][1]+'</option>');
           console.log('<option>'+data[i][1]+'</option>');

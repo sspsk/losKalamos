@@ -185,7 +185,7 @@
     <div class="row d-flex justify-content-center bg-light rounded" id="entriesForm">
       <form class="form-inline" method="get" id="entriesForm">
         <div class="form-group">
-          <label for="exampleInputName2" id="searchLabel">Id</label>
+          <label for="exampleInputName2" id="searchLabel"><b>Αναζητηση με Id</b></label>
           <input type="text" class="form-control" id="exampleInputName2" placeholder="Report id" name="report_id" required>
         </div>
         <div class="form-group">
@@ -203,15 +203,17 @@
 
 
   {% endif %}
-
+<div class="d-flex justify-content-center">
+  <h3>Διαθεσιμες αναφορες</h3>
+  </div>
 
   <ul class="list=group" id="nottaken">
-  <p>Available reports</p>
+
   {% for post in postsnottaken %}
-    <li class="list-group-item">
+    <li class="list-group-item rounded">
       <div class="row">
         <div class="col-10">
-        <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}. Address: {{post['address']}}. Details: {{post['description']}}. Available to take. </p>
+        <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Διαθεσιμο για αναλαβη. </p>
         </div>
         <div class="col">
       <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
@@ -222,13 +224,16 @@
     </li>
   {% endfor %}
   </ul>
+  <div class="d-flex justify-content-center">
+    <h3>Αναφορες υπο αναλαβη</h3>
+    </div>
   <ul class="list=group" id="taken">
-  <p>Taken reports</p>
+
   {% for post in poststaken %}
-    <li class="list-group-item">
+    <li class="list-group-item rounded">
       <div class="row">
       <div class="col-8">
-      <p>Type: {{ post['type'] }}. Region: {{post['region']}}. Area: {{post['area']}}. Address: {{post['address']}}. Details: {{post['description']}}. Taken by: {{post['username']}}</p>
+      <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Αναλαβη απο: {{post['username']}}</p>
       </div>
       {% if post['takenby'] == g.user['id'] %}
       <div class="col-2">
