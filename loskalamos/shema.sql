@@ -45,3 +45,15 @@ CREATE TABLE update_check(
 );
 
 INSERT INTO update_check (username,check_bit) VALUES ('sspsk',1);
+INSERT INTO region (name) VALUES ('ΑΓ. ΑΠΟΣΤΟΛΟΙ');
+INSERT INTO region (name) VALUES ('ΧΑΛΚΟΥΤΣΙ');
+INSERT INTO region (name) VALUES ('ΩΡΩΠΟΣ');
+INSERT INTO region (name) VALUES ('ΝΕΑ ΠΑΛΑΤΙΑ');
+INSERT INTO region (name) VALUES ('ΣΥΚΑΜΙΝΟ');
+INSERT INTO region (name) VALUES ('ΠΟΛΥΔΕΝΔΡΙ');
+INSERT INTO region (name) VALUES ('ΜΑΡΚΟΠΟΥΛΟ');
+INSERT INTO region (name) VALUES ('ΜΑΛΑΚΑΣΑ');  
+INSERT INTO region (name) VALUES ('ΑΓ. ΑΠΟΣΤΟΛΟΙ');
+INSERT INTO region (name) VALUES ('ΑΓ. ΑΠΟΣΤΟΛΟΙ');
+INSERT INTO region (name) VALUES ('ΑΓ. ΑΠΟΣΤΟΛΟΙ');
+INSERT INTO region (name) VALUES ('ΑΓ. ΑΠΟΣΤΟΛΟΙ');
