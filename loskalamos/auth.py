@@ -75,6 +75,7 @@ def register():
 
     if error is None:
         cur.execute('INSERT INTO technician (username, password, type, region) VALUES (%s, %s, %s, %s)',(username, generate_password_hash(password), type, region))
+        cur.execute('INSERT INTO update_check (username,check_bit,refreshed,logged_in) VALUES (%s, %s, %s)',(username,1,0,0))
         db.commit()
         flash('Successful registration.')
 
@@ -109,15 +110,16 @@ def index():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
+            cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(user['username'],))
+            cur.execute('UPDATE update_check SET logged_in = 1 WHERE username = %s',(user['username'],))
+            db.commit()
             return redirect(url_for('reports.entries'))
 
         flash(error)
     cur.execute('SELECT * FROM region')
     regions = cur.fetchall()
-    cur.execute('SELECT * FROM area')
-    areas = cur.fetchall()
     cur.close()
-    return render_template('auth/index.html', regions = regions, areas = areas)
+    return render_template('auth/index.html', regions = regions)
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -134,4 +136,9 @@ def load_logged_in_user():
 @bp.route('/logout')
 def logout():
     session.clear()
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('UPDATE update_check SET logged_in = 0 WHERE username = %s',(g.user['username'],))
+    db.commit()
+    cur.close()
     return redirect(url_for('auth.index'))

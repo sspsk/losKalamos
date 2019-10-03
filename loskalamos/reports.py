@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response, session
 
 from werkzeug.exceptions import abort
 
@@ -148,14 +148,35 @@ def entriesUpdate():
     db=get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
     cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-    up_to_date = cur.fetchone()['check_bit']
+    res = cur.fetchone()
+    up_to_date = res['check_bit']
+    #if this is a refersh req drop the last two reqs
+    if res['refreshed'] == 1:
+        #make fake change so the first req returns
+        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
+        db.commit()
+        #wait till the first req returns, then return this req with null
+        cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
+        res = cur.fetchone()['refreshed']
+        while(res != 0):
+            cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
+            res = cur.fetchone()['refreshed']
+            print("inside abort while")
+        return Response(json.dumps(None), mimetype='application/json')
+    cur.execute('UPDATE update_check SET refreshed = 1 WHERE username = %s',(g.user['username'],))
+    db.commit()
     hits = 1
     while(up_to_date == 0):
         time.sleep(1)
+        print(hits)
         cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-        up_to_date = cur.fetchone()['check_bit']
+        res = cur.fetchone()
+        up_to_date = res['check_bit']
         hits = hits + 1
-        if(hits >= 120):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client )
+        logged_in = res['logged_in']
+        if(hits >= 120 or logged_in == 0 ):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client )
+            cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(g.user['username'],))
+            db.commit()
             return Response(json.dumps(None), mimetype='application/json')
     if g.user['type'] == "admin":
         cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created ASC')
@@ -172,6 +193,7 @@ def entriesUpdate():
     if not postsnottaken:
         postsnottaken = None
     cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
+    cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(g.user['username'],))
     db.commit()
     cur.close()
     return  Response(json.dumps([poststaken,postsnottaken,g.user['id']]), mimetype='application/json')
