@@ -182,7 +182,7 @@ def entriesUpdate():
         up_to_date = res['check_bit']
         hits = hits + 1
         logged_in = res['logged_in']
-        if(hits >= 120 or logged_in == 0 ):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client )
+        if(hits >= 30 or logged_in == 0 ):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client ) PS: for heroku reasons made it 30
             cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(g.user['username'],))
             db.commit()
             return Response(json.dumps(None), mimetype='application/json')
