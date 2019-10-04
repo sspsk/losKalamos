@@ -6,6 +6,7 @@
   var latest;
 
   $(document).ready(function(){
+    console.log()
     longPoll();
   });
 
@@ -17,16 +18,14 @@
           console.log(data);
           if(data != null) {
             $("#taken").empty();
-            $("#taken").append("<p>Available reports</p>");
             $("#nottaken").empty();
-            $("#nottaken").append("<p>Taken reports</p>");
             if(data[0] != null){
               for(let i =0;i<data[0].length;i++){
                var html = `
                <li class="list-group-item">
                  <div class="row">
                  <div class="col-8">
-                 <p>Type: ${data[0][i][1]}. Region: ${data[0][i][3]}. Area: ${data[0][i][2]}. Address: ${data[0][i][4]}. Details: ${data[0][i][5]}. Taken by: ${data[0][i][7]}</p>
+                 <p>Τυπος βλαβης: ${data[0][i][1]}. Περιοχη: ${data[0][i][3]}. Υποπεριοχη: ${data[0][i][2]}. Διευθυνση: ${data[0][i][4]}. Περιγραφη: ${data[0][i][5]}. Αναλαβη απο: ${data[0][i][7]}.</p>
                  </div>`;
 
                  if(data[2] == data[0][i][6]){
@@ -57,7 +56,7 @@
                 <li class="list-group-item">
                   <div class="row">
                   <div class="col-10">
-                  <p>Type: ${data[1][i][1]}. Region: ${data[1][i][3]}. Area: ${data[1][i][2]}. Address: ${data[1][i][4]}. Details: ${data[1][i][5]}. Available to take</p>
+                  <p>Τυπος βλαβης: ${data[1][i][1]}. Περιοχη: ${data[1][i][3]}. Υποπεριοχη: ${data[1][i][2]}. Διευθυνση: ${data[1][i][4]}. Περιγραφη: ${data[1][i][5]}. Διαθεσιμο για αναλαβη.</p>
                   </div>`;
 
                   html += `
@@ -213,9 +212,9 @@
     <li class="list-group-item rounded">
       <div class="row">
         <div class="col-10">
-        <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Διαθεσιμο για αναλαβη. </p>
+        <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Διαθεσιμο για αναλαβη.</p>
         </div>
-        <div class="col">
+        <div class="col-2">
       <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
       <input id="take"type="submit" class="btn btn-primary" value="Take">
       </form>
@@ -233,7 +232,7 @@
     <li class="list-group-item rounded">
       <div class="row">
       <div class="col-8">
-      <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Αναλαβη απο: {{post['username']}}</p>
+      <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Αναλαβη απο: {{post['username']}}.</p>
       </div>
       {% if post['takenby'] == g.user['id'] %}
       <div class="col-2">

@@ -75,7 +75,7 @@ def register():
 
     if error is None:
         cur.execute('INSERT INTO technician (username, password, type, region) VALUES (%s, %s, %s, %s)',(username, generate_password_hash(password), type, region))
-        cur.execute('INSERT INTO update_check (username,check_bit,refreshed,logged_in) VALUES (%s, %s, %s)',(username,1,0,0))
+        cur.execute('INSERT INTO update_check (username,check_bit,refreshed,logged_in) VALUES (%s, %s, %s, %s)',(username,1,0,0))
         db.commit()
         flash('Successful registration.')
 

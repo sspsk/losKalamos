@@ -147,21 +147,29 @@ def entriesUpdate():
     print("called update")
     db=get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    print(g.user['username'])
     cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
     res = cur.fetchone()
     up_to_date = res['check_bit']
+
+
     #if this is a refersh req drop the last two reqs
+
     if res['refreshed'] == 1:
         #make fake change so the first req returns
         cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
         db.commit()
-        #wait till the first req returns, then return this req with null
+        #wait till the first req returns, then return this req with reports
         cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
         res = cur.fetchone()['refreshed']
+        print("waiting for aborted req to close")
         while(res != 0):
             cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
             res = cur.fetchone()['refreshed']
-            print("inside abort while")
+            print("waiting for aborted req to close")
+            time.sleep(0.25)
+        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
+        db.commit()
         return Response(json.dumps(None), mimetype='application/json')
     cur.execute('UPDATE update_check SET refreshed = 1 WHERE username = %s',(g.user['username'],))
     db.commit()
