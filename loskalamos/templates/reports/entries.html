@@ -21,56 +21,56 @@
             $("#nottaken").empty();
             if(data[0] != null){
               for(let i =0;i<data[0].length;i++){
-               var html = `
-               <li class="list-group-item">
-                 <div class="row">
-                 <div class="col-8">
-                 <p>Τυπος βλαβης: ${data[0][i][1]}. Περιοχη: ${data[0][i][3]}. Υποπεριοχη: ${data[0][i][2]}. Διευθυνση: ${data[0][i][4]}. Περιγραφη: ${data[0][i][5]}. Αναλαβη απο: ${data[0][i][7]}.</p>
-                 </div>`;
-
-                 if(data[2] == data[0][i][6]){
-                   console.log(data[3] == data[0][i][6])
-                   html += `
-                   <div class="col-2">
-                   <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/delete"}">
-                   <input type="submit" class="btn btn-danger" value="Delete">
-                   </form>
-                   </div>
-                   <div class="col-2">
-                   <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
-                   <input type="submit" class="btn btn-info" value="Undo">
-                   </form>
-                   </div>
+                 var html = `
+                 <tr>
+                   <td>${data[0][i][1]}</td>
+                   <td>${data[0][i][3]}</td>
+                   <td>${data[0][i][2]}</td>
+                   <td>${data[0][i][4]}</td>
+                   <td>Αναλαβη απο: ${data[0][i][7]}</td>
                    `;
-                 }
-                 html += `
-                 </div>
-                 </li>
-                 `;
+                   if(data[2] == data[0][i][6]){
+                     html += `
+                     <td>
+                     <div class="row">
+                     <div class="col">
+                     <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/delete"}">
+                     <input type="submit" class="btn btn-danger" value="Διαγραφη">
+                     </form>
+                     </div>
+                     <div class="col">
+                     <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
+                     <input type="submit" class="btn btn-info" value="Αποριψη">
+                     </form>
+                     </div>
+                   </div>
+                   </td>
+                     `;
+                   }
+                   else{
+                     html += `
+                     <td>-</td>`;
+                   }
+                  html += `
+                  </tr>`;
                $("#taken").append(html);
+
                  }
             }
             if(data[1] != null){
               for(let i =0;i<data[1].length;i++){
                 var html = `
-                <li class="list-group-item">
-                  <div class="row">
-                  <div class="col-10">
-                  <p>Τυπος βλαβης: ${data[1][i][1]}. Περιοχη: ${data[1][i][3]}. Υποπεριοχη: ${data[1][i][2]}. Διευθυνση: ${data[1][i][4]}. Περιγραφη: ${data[1][i][5]}. Διαθεσιμο για αναλαβη.</p>
-                  </div>`;
-
-                  html += `
-                  <div class="col-2">
-                  <form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
-                  <input type="submit" class="btn btn-primary" value="Take">
-                  </form>
-                  </div>
-                  `;
-
-                  html += `
-                  </div>
-                  </li>
-                  `;
+                  <tr>
+                    <td>${data[1][i][1]}</td>
+                    <td>${data[1][i][3]}</td>
+                    <td>${data[1][i][2]}</td>
+                    <td>${data[1][i][4]}</td>
+                    <td>Διαθεσιμο για αναλαβη</td>
+                    <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
+                    <input type="submit" class="btn btn-primary" value="Αναλαβη">
+                    </form><td>
+                  </tr>
+                      `;
                 $("#nottaken").append(html);
                   }
                  }
@@ -206,50 +206,82 @@
   <h3>Διαθεσιμες αναφορες</h3>
   </div>
 
-  <ul class="list=group" id="nottaken">
 
-  {% for post in postsnottaken %}
-    <li class="list-group-item rounded">
-      <div class="row">
-        <div class="col-10">
-        <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Διαθεσιμο για αναλαβη.</p>
-        </div>
-        <div class="col-2">
-      <form method="post" action="{{url_for('reports.take', id = post['id'])}}">
-      <input id="take"type="submit" class="btn btn-primary" value="Take">
-      </form>
-      </div>
-      </div>
-    </li>
-  {% endfor %}
-  </ul>
+  <table class="table table-striped bg-light rounded">
+    <thead>
+      <tr>
+        <th>Τυπος βλαβης</th>
+        <th>Κοινοτητα</th>
+        <th>Περιοχη</th>
+        <th>Διευθυνση</th>
+        <th>Κατασταση</th>
+        <th>Δραση</th>
+        <th
+      </tr>
+    </thead>
+    <tbody id="nottaken" >
+      {% for post in postsnottaken %}
+      <tr>
+        <td>{{ post['type'] }}</td>
+        <td>{{post['region']}}</td>
+        <td>{{post['area']}}</td>
+        <td>{{post['address']}}</td>
+        <td>Διαθεσιμο για αναλαβη</td>
+        <td><form method="post" action="{{url_for('reports.take', id = post['id'])}}">
+        <input id="take"type="submit" class="btn btn-primary" value="Αναλαβη">
+        </form></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
   <div class="d-flex justify-content-center">
     <h3>Αναφορες υπο αναλαβη</h3>
     </div>
-  <ul class="list=group" id="taken">
 
-  {% for post in poststaken %}
-    <li class="list-group-item rounded">
-      <div class="row">
-      <div class="col-8">
-      <p>Τυπος βλαβης: {{ post['type'] }}. Περιοχη: {{post['region']}}. Υποπεριοχη: {{post['area']}}. Διευθυνση: {{post['address']}}. Περιγραφη: {{post['description']}}. Αναλαβη απο: {{post['username']}}.</p>
-      </div>
-      {% if post['takenby'] == g.user['id'] %}
-      <div class="col-2">
-      <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
-      <input type="submit" class="btn btn-danger" value="Delete">
-      </form>
-      </div>
-      <div class="col-2">
-      <form method="post" action="{{url_for('reports.undo', id = post['id'])}}">
-      <input type="submit" class="btn btn-info" value="Undo">
-      </form>
-      </div>
-      {% endif %}
-      </div>
-    </li>
-  {% endfor %}
-  </ul>
+    <table class="table table-striped bg-light rounded">
+      <thead>
+        <tr>
+          <th>Τυπος βλαβης</th>
+          <th>Κοινοτητα</th>
+          <th>Περιοχη</th>
+          <th>Διευθυνση</th>
+          <th>Κατασταση</th>
+          <th>Δραση</th>
+          <th
+        </tr>
+      </thead>
+      <tbody id="taken" >
+        {% for post in poststaken %}
+        <tr>
+          <td>{{ post['type'] }}</td>
+          <td>{{post['region']}}</td>
+          <td>{{post['area']}}</td>
+          <td>{{post['address']}}</td>
+          <td>Αναλαβη απο: {{post['username']}}</td>
+          {% if post['takenby'] == g.user['id'] %}
+          <td>
+          <div class="row">
+          <div class="col">
+          <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
+          <input type="submit" class="btn btn-danger" value="Διαγραφη">
+          </form>
+          </div>
+          <div class="col">
+          <form method="post" action="{{url_for('reports.undo', id = post['id'])}}">
+          <input type="submit" class="btn btn-info" value="Αποριψη">
+          </form>
+          </div>
+          </div>
+          </td>
+          {% else %}
+          <td>-</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
   </div>
 
 
