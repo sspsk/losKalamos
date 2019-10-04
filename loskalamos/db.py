@@ -43,7 +43,7 @@ def init_db_command():
     db = get_db()
     cur = db.cursor()
     cur.execute('INSERT INTO technician (username, password, type, region) VALUES (%s, %s, %s, %s)',('admin', password, 'admin', 'admin'))
-    cur.execute('INSERT INTO update_check (username,check_bit,refersh,logged_in)',('admin',1,0,0))
+    cur.execute('INSERT INTO update_check (username,check_bit,refreshed,logged_in) VALUES (%s, %s, %s, %s)',('admin',1,0,0))
     cur.close()
     db.commit()
     click.echo('Initialized the database and set admin privilages.')
