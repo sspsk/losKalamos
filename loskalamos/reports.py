@@ -168,9 +168,8 @@ def entriesUpdate():
             res = cur.fetchone()['refreshed']
             print("waiting for aborted req to close")
             time.sleep(0.25)
-        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
+        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))# so it fetches data that may be lost on dropped req
         db.commit()
-        return Response(json.dumps(None), mimetype='application/json')
     cur.execute('UPDATE update_check SET refreshed = 1 WHERE username = %s',(g.user['username'],))
     db.commit()
     hits = 1
