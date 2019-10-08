@@ -4,7 +4,11 @@
 <script >
 
   function longPolling(){
-      $.getJSON($SCRIPT_ROOT+'/update',{onLeave : false},function(data){
+    $.ajax({
+      url : $SCRIPT_ROOT + '/update',
+      data :{ onLeave : false},
+      dataType: 'json',
+      success : function(data){
         if(data != null) {
           $("#taken").empty();
           $("#nottaken").empty();
@@ -72,9 +76,18 @@
                }
           }
           console.log(data);
-          longPolling();
 
-      });
+
+      },
+      error:function(jqXHR, textStatus, errorThrown){
+        if(textStatus==="timeout") {
+          console.log('timeout');
+        }
+      },
+      complete : longPolling,
+      timeout : 30000
+    });
+
 
       }
   $(document).ready(function(){
