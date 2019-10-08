@@ -6,87 +6,74 @@
   var latest;
 
   $(document).ready(function(){
-    console.log()
-    longPoll();
+
+    $("#searchBtn").click(function() {
+      var arg = $("#searchText").val();
+      $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
+        if(data != null){
+          $("#searchRes").empty();
+          $("#searchTable").removeAttr('hidden');
+          console.log(data[0]);
+          var html = `
+          <tr>
+            <td>${data[0][1]}</td>
+            <td>${data[0][3]}</td>
+            <td>${data[0][2]}</td>
+            <td>${data[0][4]}</td>
+
+
+          `;
+          if(data[0][6] ==true){
+            html += `
+            <td>Ολοκληρωθηκε απο: ${data[0][8]}</td>
+            <td>-</td>
+            `;
+          }
+          else{
+
+            if(data[0][7] == null){
+
+              html += `
+              <td>Διαθεσιμο για αναλαβη</td>
+              <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/take"}">
+              <input type="submit" class="btn btn-primary" value="Αναλαβη">
+              </form><td>
+              `;
+            }
+            else{
+              console.log("mphka");
+              html += `<td>Αναλαβη απο: ${data[0][8]}</td> `;
+              if(data[1] == data[0][7]){
+                html += `
+                <td>
+                <div class="row">
+                <div class="col">
+                <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/done"}">
+                <input type="submit" class="btn btn-danger" value="Ολοκληρωση">
+                </form>
+                </div>
+                <div class="col">
+                <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/undo"}">
+                <input type="submit" class="btn btn-info" value="Αποριψη">
+                </form>
+                </div>
+              </div>
+              </td>
+                `;
+              }
+              else{
+                html += `<td>-</td>`;
+              }
+            }
+          }
+          html += `</tr>`;
+          $("#searchRes").append(html);
+        }
+      });
+    });
   });
 
-  function longPoll(){
-    $.ajax({
-        url: $SCRIPT_ROOT+"/entriesUpdate",
-        success: function(data){
-          console.log("my data: ")
-          console.log(data);
-          if(data != null) {
-            $("#taken").empty();
-            $("#nottaken").empty();
-            if(data[0] != null){
-              for(let i =0;i<data[0].length;i++){
-                 var html = `
-                 <tr>
-                   <td>${data[0][i][1]}</td>
-                   <td>${data[0][i][3]}</td>
-                   <td>${data[0][i][2]}</td>
-                   <td>${data[0][i][4]}</td>
-                   <td>Αναλαβη απο: ${data[0][i][7]}</td>
-                   `;
-                   if(data[2] == data[0][i][6]){
-                     html += `
-                     <td>
-                     <div class="row">
-                     <div class="col">
-                     <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/delete"}">
-                     <input type="submit" class="btn btn-danger" value="Διαγραφη">
-                     </form>
-                     </div>
-                     <div class="col">
-                     <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
-                     <input type="submit" class="btn btn-info" value="Αποριψη">
-                     </form>
-                     </div>
-                   </div>
-                   </td>
-                     `;
-                   }
-                   else{
-                     html += `
-                     <td>-</td>`;
-                   }
-                  html += `
-                  </tr>`;
-               $("#taken").append(html);
 
-                 }
-            }
-            if(data[1] != null){
-              for(let i =0;i<data[1].length;i++){
-                var html = `
-                  <tr>
-                    <td>${data[1][i][1]}</td>
-                    <td>${data[1][i][3]}</td>
-                    <td>${data[1][i][2]}</td>
-                    <td>${data[1][i][4]}</td>
-                    <td>Διαθεσιμο για αναλαβη</td>
-                    <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
-                    <input type="submit" class="btn btn-primary" value="Αναλαβη">
-                    </form><td>
-                  </tr>
-                      `;
-                $("#nottaken").append(html);
-                  }
-                 }
-            }
-
-
-        },
-        error: function(jqXhr, textStatus, errorMessage){
-          console.log(errorMessage);
-        },
-        type: "GET",
-        dataType: "json",
-        complete: longPoll ,
-        timeout: 120000 // ti1meout every 2 minutes,for safety reasons(request missing)
-    });
-  }
 </script>
 {% endblock %}
 
@@ -181,31 +168,40 @@
     </form>
     </div>
     </div>
-    <div class="row d-flex justify-content-center bg-light rounded" id="entriesForm">
-      <form class="form-inline" method="get" id="entriesForm">
-        <div class="form-group">
-          <label for="exampleInputName2" id="searchLabel"><b>Αναζητηση με Id</b></label>
-          <input type="text" class="form-control" id="exampleInputName2" placeholder="Report id" name="report_id" required>
-        </div>
-        <div class="form-group">
-          <input type="submit" class="btn btn-info btn-block my-4 primary" value="Αναζητηση">
-       </div>
-      </form>
+    <div class="row d-flex justify-content-center">
+      <div class="col-3">
+          <input  id="searchText" class="form-control rounded" type="text" placeholder="Ιd αναφορας" aria-label="Search">
+          <button id="searchBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αναζητηση</button>
+          <button id="showallBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Προβολη ολων</button>
 
-    <form  class="form-inline " method="get" id="entriesForm">
-      <div class="form-group">
-        <input type="submit" class="btn btn-info btn-block my-4 primary" value="Προβολή όλων">
-     </div>
-    </form>
-
+      </div>
     </div>
+
+    <table id="searchTable" class="table table-striped bg-light rounded" hidden>
+      <thead>
+        <tr>
+          <th>Τυπος βλαβης</th>
+          <th>Κοινοτητα</th>
+          <th>Περιοχη</th>
+          <th>Διευθυνση</th>
+          <th>Κατασταση</th>
+          <th>Δραση</th>
+          <th
+        </tr>
+      </thead>
+      <tbody id="searchRes">
+
+      </tbody>
+    </table>
 
 
   {% endif %}
+
+
 <div class="d-flex justify-content-center">
   <h3>Διαθεσιμες αναφορες</h3>
   </div>
-
+  <table></table>
 
   <table class="table table-striped bg-light rounded">
     <thead>
@@ -263,8 +259,8 @@
           <td>
           <div class="row">
           <div class="col">
-          <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
-          <input type="submit" class="btn btn-danger" value="Διαγραφη">
+          <form method="post" action="{{url_for('reports.done', id = post['id'])}}">
+          <input type="submit" class="btn btn-danger" value="Ολοκληρωση">
           </form>
           </div>
           <div class="col">

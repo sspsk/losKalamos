@@ -13,3 +13,7 @@ body {
 #searchLabel {
   margin-right: 5px
 }
+
+#searchBtn, #searchText, #showallBtn {
+  margin : 5px;
+}

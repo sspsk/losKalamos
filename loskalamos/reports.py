@@ -46,7 +46,7 @@ def report():
     elif not address:
         error = 'Address is required.'
     if error is None:
-        cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone))
+        cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone,False))
         id = cur.fetchone()['id']
         cur.execute('UPDATE update_check SET check_bit = 1')
         db.commit()
@@ -64,21 +64,27 @@ def entries():
     cur.execute('SELECT * FROM region')
     regions = cur.fetchall()
     report_id = request.args.get('report_id')
+    res = None;
     if g.user['type'] == "admin":
         if report_id is None:
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created ASC')
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
             poststaken = cur.fetchall()
-            cur.execute('SELECT * FROM report WHERE takenby IS NULL ORDER BY created ASC')
+            cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
             postsnottaken = cur.fetchall()
         else:
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
-            poststaken = cur.fetchall()
-            cur.execute('SELECT * FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
-            postsnottaken = cur.fetchall()
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, done, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
+            poststaken = cur.fetchone()
+            cur.execute('SELECT id, type, area, region, address, description, done, takenby FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
+            postsnottaken = cur.fetchone()
+            if poststaken is None:
+                res = postsnottaken
+            else:
+                res = poststaken
+            return Response(json.dumps([res,g.user['id']]), mimetype='application/json')
     else:
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id']))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
         poststaken = cur.fetchall()
-        cur.execute('SELECT * FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created ASC',(g.user['type'], g.user['region']))
+        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
         postsnottaken = cur.fetchall()
     cur.close()
     return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions )
@@ -111,8 +117,8 @@ def take(id):
     db.commit()
     return redirect(url_for('reports.entries'))
 
-@bp.route('/<int:id>/delete', methods = ('POST',))
-def delete(id):
+@bp.route('/<int:id>/done', methods = ('POST',))
+def done(id):
     report = get_report(id)
     if report['takenby'] is None or report['takenby'] !=g.user['id']:
         abort(403)
@@ -120,7 +126,7 @@ def delete(id):
         abort(403,"Not the same type of work")
     db = get_db()
     cur = db.cursor()
-    cur.execute('DELETE FROM report WHERE id = %s',(id, ))
+    cur.execute('UPDATE report SET done = %s WHERE id = %s',(True, id))
     cur.execute('UPDATE update_check SET check_bit = 1')
     cur.close()
     db.commit()
@@ -141,66 +147,3 @@ def undo(id):
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
-
-@bp.route('/entriesUpdate')
-def entriesUpdate():
-    print("called update")
-    db=get_db()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
-    print(g.user['username'])
-    cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-    res = cur.fetchone()
-    up_to_date = res['check_bit']
-
-
-    #if this is a refersh req drop the last two reqs
-
-    if res['refreshed'] == 1:
-        #make fake change so the first req returns
-        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
-        db.commit()
-        #wait till the first req returns, then return this req with reports
-        cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-        res = cur.fetchone()['refreshed']
-        print("waiting for aborted req to close")
-        while(res != 0):
-            cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-            res = cur.fetchone()['refreshed']
-            print("waiting for aborted req to close")
-            time.sleep(0.25)
-        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))# so it fetches data that may be lost on dropped req
-        db.commit()
-    cur.execute('UPDATE update_check SET refreshed = 1 WHERE username = %s',(g.user['username'],))
-    db.commit()
-    hits = 1
-    while(up_to_date == 0):
-        time.sleep(1)
-        print(hits)
-        cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-        res = cur.fetchone()
-        up_to_date = res['check_bit']
-        hits = hits + 1
-        logged_in = res['logged_in']
-        if(hits >= 30 or logged_in == 0 ):#an gia 2 lepta den yparxei kati neo ,kleise (gia logous pou ginetai abort to client ) PS: for heroku reasons made it 30
-            cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(g.user['username'],))
-            db.commit()
-            return Response(json.dumps(None), mimetype='application/json')
-    if g.user['type'] == "admin":
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id ORDER BY created ASC')
-        poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL ORDER BY created ASC')
-        postsnottaken = cur.fetchall()
-    else :
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id']))
-        poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s ORDER BY created ASC',(g.user['type'], g.user['region']))
-        postsnottaken = cur.fetchall()
-    if not poststaken:
-        poststaken = None
-    if not postsnottaken:
-        postsnottaken = None
-    cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
-    cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(g.user['username'],))
-    db.commit()
-    cur.close()
-    return  Response(json.dumps([poststaken,postsnottaken,g.user['id']]), mimetype='application/json')

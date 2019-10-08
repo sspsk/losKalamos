@@ -22,7 +22,8 @@ CREATE TABLE report (
   address TEXT NOT NULL,
   takenby INTEGER,
   contact_name TEXT,
-  contact_phone TEXT
+  contact_phone TEXT,
+  done BOOLEAN NOT NULL
 );
 
 CREATE TABLE region (
