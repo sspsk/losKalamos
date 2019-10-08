@@ -160,6 +160,8 @@ def update():
         hits +=1
         cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
         res=cur.fetchone()['check_bit']
+        if hits >= 30:
+            return Response(json.dumps(None),mimetype='application/json')
     if g.user['type'] == "admin":
         cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
         poststaken = cur.fetchall()
@@ -173,4 +175,9 @@ def update():
     cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
     db.commit()
     cur.close()
+
+    if not poststaken:
+        poststaken = None
+    if not postsnottaken:
+        postsnottaken = None
     return Response(json.dumps([poststaken,postsnottaken,g.user['id']]),mimetype='application/json')

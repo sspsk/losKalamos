@@ -5,13 +5,81 @@
 
   function longPolling(){
       $.getJSON($SCRIPT_ROOT+'/update',{onLeave : false},function(data){
-        if(data)
-        console.log(data);
-        longPolling();});
-  }
+        if(data != null) {
+          $("#taken").empty();
+          $("#nottaken").empty();
+          if(data[0] != null){
+            for(let i =0;i<data[0].length;i++){
+               var html = `
+               <tr>
+                 <td>${data[0][i][1]}</td>
+                 <td>${data[0][i][3]}</td>
+                 <td>${data[0][i][2]}</td>
+                 <td>${data[0][i][4]}</td>
+                 <td>Αναλαβη απο: ${data[0][i][7]}</td>
+                 `;
+                 if(data[2] == data[0][i][6]){
+                   html += `
+                   <td>
+                   <div class="row">
+                   <div class="col">
+                   <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/delete"}">
+                   <input type="submit" class="btn btn-danger" value="Διαγραφη">
+                   </form>
+                   </div>
+                   <div class="col">
+                   <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
+                   <input type="submit" class="btn btn-info" value="Αποριψη">
+                   </form>
+                   </div>
+                 </div>
+                 </td>
+                   `;
+                 }
+                 else{
+                   html += `
+                   <td>-</td>`;
+                 }
+                html += `
+                </tr>
+                <tr>
+                  <td colspan="6"><b>Περιγραφη:</b> ${data[0][i][5]}</td>
+                </tr>
+                `;
+             $("#taken").append(html);
+
+               }
+          }
+          if(data[1] != null){
+            for(let i =0;i<data[1].length;i++){
+              var html = `
+                <tr>
+                  <td>${data[1][i][1]}</td>
+                  <td>${data[1][i][3]}</td>
+                  <td>${data[1][i][2]}</td>
+                  <td>${data[1][i][4]}</td>
+                  <td>Διαθεσιμο για αναλαβη</td>
+                  <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
+                  <input type="submit" class="btn btn-primary" value="Αναλαβη">
+                  </form><td>
+                </tr>
+                <tr>
+                  <td colspan="6"><b>Περιγραφη:</b> ${data[1][i][5]}</td>
+                </tr>
+                    `;
+              $("#nottaken").append(html);
+                }
+               }
+          }
+          console.log(data);
+          longPolling();
+
+      });
+
+      }
   $(document).ready(function(){
-    $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){alert(bye);});});
-    setTimeout(function(){longPolling(); },3000);
+    $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){});});
+    setTimeout(function(){longPolling(); },4000);
     $("#searchBtn").click(function() {
       var arg = $("#searchText").val();
       $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
