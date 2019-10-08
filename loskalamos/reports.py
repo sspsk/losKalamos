@@ -8,16 +8,7 @@ import json
 import time
 bp = Blueprint('reports',__name__)
 
-@bp.route('/getareas',methods = ('GET',))
-def getareas():
-    region = request.args.get('region')
-    db = get_db()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
-    cur.execute('SELECT * FROM region WHERE name = %s',(region,))
-    region_id = cur.fetchone()[0]
-    cur.execute('SELECT * FROM area WHERE region_id = %s',(region_id,))
-    areas = cur.fetchall()
-    return Response(json.dumps(areas), mimetype='application/json')
+
 
 
 
@@ -36,21 +27,21 @@ def report():
     error = None
 
     if not type:
-        error = 'Type is required.'
+        error = 'Επιλεξτε τυπο βλαβης.'
     elif not area:
-        error = 'Area is required.'
+        error = 'Επιλεξτε περιοχη στην κοινοτητα.'
     elif not description:
-        error = 'Description is required'
+        error = 'Προσθεστε περιγραφη της βλαβης'
     elif not region:
-        error = 'Region is required.'
+        error = 'Επιλεξτε κοινοτητα.'
     elif not address:
-        error = 'Address is required.'
+        error = 'Προσθεστε διεθυνση.'
     if error is None:
         cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone,False))
         id = cur.fetchone()['id']
         cur.execute('UPDATE update_check SET check_bit = 1')
         db.commit()
-        flash('Thank you {0}. Successful report. Id of report: {1}'.format(contact_name,id))
+        flash('Επιτυχημενη αναφορα. Id αναφορας: {1}'.format(contact_name,id))
 
     if error is not  None:
         flash(error)
@@ -147,3 +138,39 @@ def undo(id):
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
+
+
+@bp.route('/update')
+def update():
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    onLeave = request.args.get('onLeave')
+    print(onLeave)
+    if onLeave == "true":
+        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
+        db.commit()
+        print("terminating both requests")
+        return Response(json.dumps(None),mimetype='application/json')
+    cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
+    res=cur.fetchone()['check_bit']
+    hits = 1
+    while(res == 0):
+        time.sleep(1)
+        print(hits)
+        hits +=1
+        cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
+        res=cur.fetchone()['check_bit']
+    if g.user['type'] == "admin":
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
+        poststaken = cur.fetchall()
+        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
+        postsnottaken = cur.fetchall()
+    else:
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
+        poststaken = cur.fetchall()
+        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
+        postsnottaken = cur.fetchall()
+    cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
+    db.commit()
+    cur.close()
+    return Response(json.dumps([poststaken,postsnottaken,g.user['id']]),mimetype='application/json')

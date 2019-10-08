@@ -1,6 +1,7 @@
 import functools
 import psycopg2.extras
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, Response
+import json
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -22,7 +23,7 @@ def addregion():
     if error is None:
         cur.execute('INSERT INTO region ( name) VALUES (%s)',(region, ))
         db.commit()
-        flash("Successful added: {}".format(region))
+        flash("Επιτυχημενη προσθεση κοινοτητας: {}".format(region))
     if error is not None:
         flash(error)
     cur.close()
@@ -45,11 +46,22 @@ def addarea():
     if error is None:
         cur.execute('INSERT INTO area (name,region_id) VALUES (%s, %s)',(area, id))
         db.commit()
-        flash("Successful added: {} in region: {}".format(area,region))
+        flash("Επιτυχημενη προσθεση της περιοχης: {} στην κοινοτητα: {}".format(area,region))
     if error is not None:
         flash(error)
     cur.close()
     return redirect(url_for('reports.entries'))
+
+@bp.route('/getareas',methods = ('GET',))
+def getareas():
+    region = request.args.get('region')
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM region WHERE name = %s',(region,))
+    region_id = cur.fetchone()[0]
+    cur.execute('SELECT * FROM area WHERE region_id = %s',(region_id,))
+    areas = cur.fetchall()
+    return Response(json.dumps(areas), mimetype='application/json')
 
 @bp.route('/register', methods=('POST', ))
 def register():
@@ -77,7 +89,7 @@ def register():
         cur.execute('INSERT INTO technician (username, password, type, region) VALUES (%s, %s, %s, %s)',(username, generate_password_hash(password), type, region))
         cur.execute('INSERT INTO update_check (username,check_bit,refreshed,logged_in) VALUES (%s, %s, %s, %s)',(username,1,0,0))
         db.commit()
-        flash('Successful registration.')
+        flash('Επιτυχημενη δημιουργια τεχνικου.')
 
     if error is not  None:
         flash(error)
@@ -103,9 +115,9 @@ def index():
 
 
         if user is None:
-            error = 'Incorrect username.'
+            error = 'Δεν υπαρχει χρηστης με αυτο το ονομα χρηστη.'
         elif not check_password_hash(user['password'], password):
-            error = 'Incorrect password.'
+            error = 'Λανθασμενος κωδικας προσβασης.'
 
         if error is None:
             session.clear()

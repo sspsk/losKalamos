@@ -3,10 +3,15 @@
 {% block myscript %}
 <script >
 
-  var latest;
-
+  function longPolling(){
+      $.getJSON($SCRIPT_ROOT+'/update',{onLeave : false},function(data){
+        if(data)
+        console.log(data);
+        longPolling();});
+  }
   $(document).ready(function(){
-
+    $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){alert(bye);});});
+    setTimeout(function(){longPolling(); },3000);
     $("#searchBtn").click(function() {
       var arg = $("#searchText").val();
       $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
@@ -41,7 +46,6 @@
               `;
             }
             else{
-              console.log("mphka");
               html += `<td>Αναλαβη απο: ${data[0][8]}</td> `;
               if(data[1] == data[0][7]){
                 html += `
@@ -71,6 +75,10 @@
         }
       });
     });
+
+
+
+
   });
 
 
@@ -102,7 +110,7 @@
   <div class="col-5 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded"method="post" action="{{url_for('auth.register')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Δημιουργεια τεχνικου</p>
+        <p class="h4 mb-4 text-center" >Δημιουργια τεχνικου</p>
       </div>
       <div class="form-group">
      <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Συνθηματικο" name="username" required>
@@ -115,13 +123,14 @@
        <option selected disabled>Είδος εργασίας</option>
          <option>Υδρευση</option>
          <option>Οδόστρωμα</option>
-         <option>Ηλεκτροδότηση</option>
+         <option>Ηλεκτροφωτισμος</option>
+         <option>Καθαριοτητα</option>
          <option>admin</option>
       </select>
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
-        <option selected disabled>Περιοχη</option>
+        <option selected disabled>Κοινοτητα</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
@@ -129,17 +138,17 @@
       </select>
       </div>
       <div class="form-group">
-     <input type="submit" class="btn btn-info btn-block my-4 primary" value="Δημιουργεια">
+     <input type="submit" class="btn btn-info btn-block my-4 primary" value="Δημιουργια">
      </div>
     </form>
     </div>
     <div class="col-3 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addregion')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Πρόσθεση περιοχης</p>
+        <p class="h4 mb-4 text-center" >Πρόσθεση κοινοτητας</p>
       </div>
       <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Περιοχη" name="region" required>
+     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Κοινοτητα" name="region" required>
      </div>
      <div class="form-group">
     <input type="submit" class="btn btn-info btn-block my-4 primary" value="Προσθεση">
@@ -149,18 +158,18 @@
     <div class="col-3 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addarea')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Πρόσθεση υποπεριοχής</p>
+        <p class="h4 mb-4 text-center" >Πρόσθεση περιοχης</p>
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
-        <option selected disabled>Περιοχη</option>
+        <option selected disabled>Κοινοτητα</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
       </select>
       </div>
       <div class="form-group">
-     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Υποπεριοχη" name="area" required>
+     <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Περιοχη" name="area" required>
      </div>
      <div class="form-group">
     <input type="submit" class="btn btn-info btn-block my-4 primary" value="Πρόσθεση">
@@ -217,8 +226,8 @@
     </thead>
     <tbody id="nottaken" >
       {% for post in postsnottaken %}
-      <tr>
-        <td>{{ post['type'] }}</td>
+      <tr data-id="{{post['id']}}" class="tableRow">
+        <td >{{ post['type'] }}</td>
         <td>{{post['region']}}</td>
         <td>{{post['area']}}</td>
         <td>{{post['address']}}</td>
@@ -227,7 +236,11 @@
         <input id="take"type="submit" class="btn btn-primary" value="Αναλαβη">
         </form></td>
       </tr>
+      <tr>
+        <td colspan="6"><b>Περιγραφη:</b> {{post['description']}}</td>
+      </tr>
       {% endfor %}
+
     </tbody>
   </table>
 
@@ -249,7 +262,7 @@
       </thead>
       <tbody id="taken" >
         {% for post in poststaken %}
-        <tr>
+        <tr data-id="{{post['id']}}" class="tableRow">
           <td>{{ post['type'] }}</td>
           <td>{{post['region']}}</td>
           <td>{{post['area']}}</td>
@@ -273,6 +286,9 @@
           {% else %}
           <td>-</td>
           {% endif %}
+        </tr>
+        <tr>
+          <td colspan="6"><b>Περιγραφη:</b> {{post['description']}}</td>
         </tr>
         {% endfor %}
       </tbody>

@@ -14,6 +14,6 @@ body {
   margin-right: 5px
 }
 
-#searchBtn, #searchText, #showallBtn {
+#searchBtn, #searchText, #showallBtn, #searchTable {
   margin : 5px;
 }

@@ -10,7 +10,6 @@
           $("#areaSelector").append('<option selected disabled>Υποπεριοχη</option>');
         for(let i =0;i<data.length;i++){
           $("#areaSelector").append('<option>'+data[i][1]+'</option>');
-          console.log('<option>'+data[i][1]+'</option>');
         }
       });
       //kane get request me to $(this).val() kai append to html sto select kato
@@ -21,9 +20,7 @@
 {% block content %}
 
 <div class="container">
- {% for message in get_flashed_messages() %}
-     <div class="alert alert-info">{{ message }}</div>
- {% endfor %}
+
 
   <div class="row d-flex justify-content-center ">
     <h1>Δημος Ωρωπου</h1>
@@ -42,14 +39,15 @@
             <option selected disabled>Ειδος</option>
             <option>Υδρευση</option>
             <option>Οδόστρωμα</option>
-            <option>Ηλεκτροδότηση</option>
+            <option>Ηλεκτροφωτισμος</option>
+            <option>Καθαριοτητα</option>
             <option>Αλλο</option>
 
           </select>
           </div>
            <div class="form-group">
              <select id="regionSelector" class="form-control"  name="region" >
-               <option selected disabled>Περιοχη</option>
+               <option selected disabled>Κοινοτητα</option>
                {% for region in regions %}
                <option>{{region['name']}}</option>
                {%endfor%}
@@ -57,7 +55,7 @@
           </div>
           <div class="form-group">
             <select id="areaSelector" class="form-control"  name="area" >
-              <option selected disabled>Υποπεριοχη</option>
+              <option selected disabled>Περιοχη</option>
             </select>
          </div>
           <div class="form-group">
@@ -67,10 +65,10 @@
           <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Περιγραφη βλαβης" name="description" required>
           </div>
           <div class="form-group">
-         <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Ονοματεπωνυμο(οχι απαραίτητο)" name="contact_name" >
+         <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Ονοματεπωνυμο(οχι απαραίτητο-επιθυμητο)" name="contact_name" >
          </div>
          <div class="form-group">
-        <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Τηλεφωνο επικοινωνιας(οχι απαραίτητο)" name="contact_phone" >
+        <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Τηλεφωνο επικοινωνιας(οχι απαραίτητο-επιθυμητο)" name="contact_phone" >
         </div>
         <div class="form-group">
            <button class="btn btn-info btn-block my-4" type="submit">Αναφορα</button>
@@ -104,7 +102,7 @@
         <p class="h4 mb-4 text-center">Σύνδεση</p>
         </div>
         <div class="form-group">
-            <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Συνθηματικο" name="username" required>
+            <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Ονομα χρήστη" name="username" required>
             </div>
         <div class="form-group">
         <input type="password" id="defaultLoginFormPassword" class="form-control mb-4" placeholder="Κωδικος προσβασης" name="password" required>
@@ -116,6 +114,9 @@
   </div>
   {% endif %}
   </div>
+  {% for message in get_flashed_messages() %}
+      <div class="alert alert-info">{{ message }}</div>
+  {% endfor %}
 
 </div>
 
