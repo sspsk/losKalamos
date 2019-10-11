@@ -27,21 +27,21 @@ def report():
     error = None
 
     if not type:
-        error = 'Επιλεξτε τυπο βλαβης.'
+        error = 'Επιλέξτε τύπο βλάβης.'
     elif not area:
-        error = 'Επιλεξτε περιοχη στην κοινοτητα.'
+        error = 'Επιλέξτε περιοχή στην κοινότητα.'
     elif not description:
-        error = 'Προσθεστε περιγραφη της βλαβης'
+        error = 'Προσθέστε περιγραφή της βλάβης'
     elif not region:
-        error = 'Επιλεξτε κοινοτητα.'
+        error = 'Επιλέξτε κοινότητα.'
     elif not address:
-        error = 'Προσθεστε διεθυνση.'
+        error = 'Προσθέστε διεύθυνση.'
     if error is None:
         cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone,False))
         id = cur.fetchone()['id']
         cur.execute('UPDATE update_check SET check_bit = 1')
         db.commit()
-        flash('Επιτυχημενη αναφορα. Id αναφορας: {1}'.format(contact_name,id))
+        flash('Επιτυχημένη αναφορά. Id αναφοράς: {1}'.format(contact_name,id))
 
     if error is not  None:
         flash(error)
@@ -63,6 +63,8 @@ def entries():
             cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
             postsnottaken = cur.fetchall()
         else:
+            if(report_id == ""):
+                return Response(json.dumps([None,g.user['id']]), mimetype='application/json')
             cur.execute('SELECT p.id, p.type, area, p.region, address, description, done, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
             poststaken = cur.fetchone()
             cur.execute('SELECT id, type, area, region, address, description, done, takenby FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
@@ -104,6 +106,7 @@ def take(id):
         abort(403,"Not the same type of work")
     cur.execute('UPDATE report SET takenby = %s WHERE id = %s',(g.user['id'],id))
     cur.execute('UPDATE update_check SET check_bit = 1')
+    print("EGINE 1 SE OLOUS APO TAKE")
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
@@ -132,7 +135,6 @@ def undo(id):
         abort(403,"Not the same type of work")
     db = get_db()
     cur = db.cursor()
-    print("pass")
     cur.execute('UPDATE report SET takenby = NULL WHERE id = %s',(id,))
     cur.execute('UPDATE update_check SET check_bit = 1')
     cur.close()
@@ -148,6 +150,7 @@ def update():
     print(onLeave)
     if onLeave == "true":
         cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
+        print('EGINE ENA APO FAKE')
         db.commit()
         print("terminating both requests")
         return Response(json.dumps(None),mimetype='application/json')
@@ -173,6 +176,7 @@ def update():
         cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
         postsnottaken = cur.fetchall()
     cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
+    print('EGINE 0 SE ADMIN')
     db.commit()
     cur.close()
 

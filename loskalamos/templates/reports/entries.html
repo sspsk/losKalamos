@@ -2,7 +2,77 @@
 {% block title %} entries {% endblock %}
 {% block myscript %}
 <script >
+  var prevId ;
+  function search(arg) {
 
+    $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
+
+      if(data[0] != null){
+        $("#searchRes").empty();
+        $("#searchTable").removeAttr('hidden');
+        console.log(data[0]);
+        var html = `
+        <tr data-id="${data[0][0]}">
+          <td>${data[0][1]}</td>
+          <td>${data[0][3]}</td>
+          <td>${data[0][2]}</td>
+          <td>${data[0][4]}</td>
+
+
+        `;
+        if(data[0][6] ==true){
+          html += `
+          <td>Ολοκληρώθηκε απο: ${data[0][8]}</td>
+          <td>-</td>
+          `;
+        }
+        else{
+
+          if(data[0][7] == null){
+
+            html += `
+            <td>Διαθέσιμο για αναλαβή</td>
+            <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/take"}">
+            <input type="submit" class="btn btn-primary" value="Αναλαβή">
+            </form><td>
+            `;
+          }
+          else{
+            html += `<td>Αναλαβή απο: ${data[0][8]}</td> `;
+            if(data[1] == data[0][7]){
+              html += `
+              <td>
+              <div class="row">
+              <div class="col">
+              <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/done"}">
+              <input type="submit" class="btn btn-danger" value="Ολοκλήρωση">
+              </form>
+              </div>
+              <div class="col">
+              <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/undo"}">
+              <input type="submit" class="btn btn-info" value="Απόριψη">
+              </form>
+              </div>
+            </div>
+            </td>
+              `;
+            }
+            else{
+              html += `<td>-</td>`;
+            }
+          }
+        }
+        html += `</tr>
+        <tr>
+          <td colspan="6"><b>Περιγραφή:</b> ${data[0][5]}</td>
+        </tr>
+        `;
+
+        $("#searchRes").append(html);
+      }
+    });
+    prevId = arg;
+  }
   function longPolling(){
     $.ajax({
       url : $SCRIPT_ROOT + '/update',
@@ -10,17 +80,21 @@
       dataType: 'json',
       success : function(data){
         if(data != null) {
+          if(prevId != undefined){
+            search(prevId);
+          }
           $("#taken").empty();
           $("#nottaken").empty();
           if(data[0] != null){
             for(let i =0;i<data[0].length;i++){
+
                var html = `
-               <tr>
+               <tr data-id="${data[0][i][0]}">
                  <td>${data[0][i][1]}</td>
                  <td>${data[0][i][3]}</td>
                  <td>${data[0][i][2]}</td>
                  <td>${data[0][i][4]}</td>
-                 <td>Αναλαβη απο: ${data[0][i][7]}</td>
+                 <td>Αναλαβή απο: ${data[0][i][7]}</td>
                  `;
                  if(data[2] == data[0][i][6]){
                    html += `
@@ -28,12 +102,12 @@
                    <div class="row">
                    <div class="col">
                    <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/delete"}">
-                   <input type="submit" class="btn btn-danger" value="Διαγραφη">
+                   <input type="submit" class="btn btn-danger" value="Διαγραφή">
                    </form>
                    </div>
                    <div class="col">
                    <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
-                   <input type="submit" class="btn btn-info" value="Αποριψη">
+                   <input type="submit" class="btn btn-info" value="Απόριψη">
                    </form>
                    </div>
                  </div>
@@ -47,7 +121,7 @@
                 html += `
                 </tr>
                 <tr>
-                  <td colspan="6"><b>Περιγραφη:</b> ${data[0][i][5]}</td>
+                  <td colspan="6"><b>Περιγραφή:</b> ${data[0][i][5]}</td>
                 </tr>
                 `;
              $("#taken").append(html);
@@ -57,7 +131,7 @@
           if(data[1] != null){
             for(let i =0;i<data[1].length;i++){
               var html = `
-                <tr>
+                <tr data-id="${data[1][i][0]}">
                   <td>${data[1][i][1]}</td>
                   <td>${data[1][i][3]}</td>
                   <td>${data[1][i][2]}</td>
@@ -91,74 +165,23 @@
 
       }
   $(document).ready(function(){
-    $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){});});
-    setTimeout(function(){longPolling(); },4000);
-    $("#searchBtn").click(function() {
-      var arg = $("#searchText").val();
-      $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
-        if(data != null){
-          $("#searchRes").empty();
-          $("#searchTable").removeAttr('hidden');
-          console.log(data[0]);
-          var html = `
-          <tr>
-            <td>${data[0][1]}</td>
-            <td>${data[0][3]}</td>
-            <td>${data[0][2]}</td>
-            <td>${data[0][4]}</td>
-
-
-          `;
-          if(data[0][6] ==true){
-            html += `
-            <td>Ολοκληρωθηκε απο: ${data[0][8]}</td>
-            <td>-</td>
-            `;
-          }
-          else{
-
-            if(data[0][7] == null){
-
-              html += `
-              <td>Διαθεσιμο για αναλαβη</td>
-              <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/take"}">
-              <input type="submit" class="btn btn-primary" value="Αναλαβη">
-              </form><td>
-              `;
-            }
-            else{
-              html += `<td>Αναλαβη απο: ${data[0][8]}</td> `;
-              if(data[1] == data[0][7]){
-                html += `
-                <td>
-                <div class="row">
-                <div class="col">
-                <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/done"}">
-                <input type="submit" class="btn btn-danger" value="Ολοκληρωση">
-                </form>
-                </div>
-                <div class="col">
-                <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/undo"}">
-                <input type="submit" class="btn btn-info" value="Αποριψη">
-                </form>
-                </div>
-              </div>
-              </td>
-                `;
-              }
-              else{
-                html += `<td>-</td>`;
-              }
-            }
-          }
-          html += `</tr>`;
-          $("#searchRes").append(html);
-        }
-      });
+    if(sessionStorage.getItem("pos") != undefined){
+    window.scrollTo(0, sessionStorage.getItem("pos"));
+    console.log(sessionStorage.getItem("pos"));
+  }
+    $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){});sessionStorage.setItem("pos",window.pageYOffset);});
+    setTimeout(function(){longPolling();},4000);
+    $("#searchBtn").click(function(){
+        var arg = $("#searchText").val();
+        search(arg);
     });
 
 
-
+    $("#cancelBtn").on("click",function(){
+      $("#searchRes").empty();
+      $("#searchTable").attr("hidden",true);
+      prevId = undefined;
+    });
 
   });
 
@@ -191,7 +214,7 @@
   <div class="col-5 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded"method="post" action="{{url_for('auth.register')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Δημιουργια τεχνικου</p>
+        <p class="h4 mb-4 text-center" >Δημιουργία τεχνικού</p>
       </div>
       <div class="form-group">
      <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Συνθηματικο" name="username" required>
@@ -202,16 +225,16 @@
      <div class="form-group text-center">
      <select class="form-control"  name="type">
        <option selected disabled>Είδος εργασίας</option>
-         <option>Υδρευση</option>
+         <option>Ύδρευση</option>
          <option>Οδόστρωμα</option>
-         <option>Ηλεκτροφωτισμος</option>
-         <option>Καθαριοτητα</option>
+         <option>Ηλεκτροφωτισμός</option>
+         <option>Καθαριότητα</option>
          <option>admin</option>
       </select>
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
-        <option selected disabled>Κοινοτητα</option>
+        <option selected disabled>Κοινότητα</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
@@ -226,7 +249,7 @@
     <div class="col-3 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addregion')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Πρόσθεση κοινοτητας</p>
+        <p class="h4 mb-4 text-center" >Πρόσθεση κοινότητας</p>
       </div>
       <div class="form-group">
      <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Κοινοτητα" name="region" required>
@@ -239,11 +262,11 @@
     <div class="col-3 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addarea')}}">
       <div class="form-group">
-        <p class="h4 mb-4 text-center" >Πρόσθεση περιοχης</p>
+        <p class="h4 mb-4 text-center" >Πρόσθεση περιοχής</p>
       </div>
       <div class="form-group">
       <select class="form-control"  name="region" >
-        <option selected disabled>Κοινοτητα</option>
+        <option selected disabled>Κοινότητα</option>
         {% for region in regions %}
         <option>{{region['name']}}</option>
         {%endfor%}
@@ -259,10 +282,10 @@
     </div>
     </div>
     <div class="row d-flex justify-content-center">
-      <div class="col-3">
-          <input  id="searchText" class="form-control rounded" type="text" placeholder="Ιd αναφορας" aria-label="Search">
-          <button id="searchBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αναζητηση</button>
-          <button id="showallBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Προβολη ολων</button>
+      <div class="col-5">
+          <input  id="searchText" class="form-control rounded" type="text" placeholder="Ιd αναφορας" aria-label="Search" required>
+          <button id="searchBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αναζήτηση</button>
+          <button id="cancelBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αφαίρεση αναζήτησης</button>
 
       </div>
     </div>
@@ -270,12 +293,12 @@
     <table id="searchTable" class="table table-striped bg-light rounded" hidden>
       <thead>
         <tr>
-          <th>Τυπος βλαβης</th>
-          <th>Κοινοτητα</th>
-          <th>Περιοχη</th>
-          <th>Διευθυνση</th>
-          <th>Κατασταση</th>
-          <th>Δραση</th>
+          <th>Τύπος βλαβης</th>
+          <th>Κοινότητα</th>
+          <th>Περιοχή</th>
+          <th>Διεύθυνση</th>
+          <th>Κατάσταση</th>
+          <th>Δράση</th>
           <th
         </tr>
       </thead>
@@ -289,20 +312,20 @@
 
 
 <div class="d-flex justify-content-center">
-  <h3>Διαθεσιμες αναφορες</h3>
+  <h3>Διαθέσιμες αναφορές</h3>
   </div>
   <table></table>
 
   <table class="table table-striped bg-light rounded">
     <thead>
       <tr>
-        <th>Τυπος βλαβης</th>
-        <th>Κοινοτητα</th>
-        <th>Περιοχη</th>
-        <th>Διευθυνση</th>
-        <th>Κατασταση</th>
-        <th>Δραση</th>
-        <th
+        <th>Τύπος βλαβης</th>
+        <th>Κοινότητα</th>
+        <th>Περιοχή</th>
+        <th>Διεύθυνση</th>
+        <th>Κατάσταση</th>
+        <th>Δράση</th>
+
       </tr>
     </thead>
     <tbody id="nottaken" >
@@ -314,11 +337,11 @@
         <td>{{post['address']}}</td>
         <td>Διαθεσιμο για αναλαβη</td>
         <td><form method="post" action="{{url_for('reports.take', id = post['id'])}}">
-        <input id="take"type="submit" class="btn btn-primary" value="Αναλαβη">
+        <input id="take"type="submit" class="btn btn-primary" value="Αναλαβή">
         </form></td>
       </tr>
       <tr>
-        <td colspan="6"><b>Περιγραφη:</b> {{post['description']}}</td>
+        <td colspan="6"><b>Περιγραφή:</b> {{post['description']}}</td>
       </tr>
       {% endfor %}
 
@@ -326,19 +349,19 @@
   </table>
 
   <div class="d-flex justify-content-center">
-    <h3>Αναφορες υπο αναλαβη</h3>
+    <h3>Αναφορές υπο αναλαβή</h3>
     </div>
 
     <table class="table table-striped bg-light rounded">
       <thead>
         <tr>
-          <th>Τυπος βλαβης</th>
-          <th>Κοινοτητα</th>
-          <th>Περιοχη</th>
-          <th>Διευθυνση</th>
-          <th>Κατασταση</th>
-          <th>Δραση</th>
-          <th
+          <th>Τύπος βλαβης</th>
+          <th>Κοινότητα</th>
+          <th>Περιοχή</th>
+          <th>Διεύθυνση</th>
+          <th>Κατάσταση</th>
+          <th>Δράση</th>
+
         </tr>
       </thead>
       <tbody id="taken" >
@@ -348,18 +371,18 @@
           <td>{{post['region']}}</td>
           <td>{{post['area']}}</td>
           <td>{{post['address']}}</td>
-          <td>Αναλαβη απο: {{post['username']}}</td>
+          <td>Αναλαβή απο: {{post['username']}}</td>
           {% if post['takenby'] == g.user['id'] %}
           <td>
           <div class="row">
           <div class="col">
           <form method="post" action="{{url_for('reports.done', id = post['id'])}}">
-          <input type="submit" class="btn btn-danger" value="Ολοκληρωση">
+          <input type="submit" class="btn btn-danger" value="Ολοκλήρωση">
           </form>
           </div>
           <div class="col">
           <form method="post" action="{{url_for('reports.undo', id = post['id'])}}">
-          <input type="submit" class="btn btn-info" value="Αποριψη">
+          <input type="submit" class="btn btn-info" value="Απόριψη">
           </form>
           </div>
           </div>
@@ -369,7 +392,7 @@
           {% endif %}
         </tr>
         <tr>
-          <td colspan="6"><b>Περιγραφη:</b> {{post['description']}}</td>
+          <td colspan="6"><b>Περιγραφή:</b> {{post['description']}}</td>
         </tr>
         {% endfor %}
       </tbody>
