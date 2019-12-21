@@ -13,7 +13,7 @@ bp = Blueprint('auth', __name__)
 def addregion():
     db = get_db()
     cur = db.cursor()
-    region = request.form['region']
+    region = request.form['region']##add to upper,remove spaces
     error = None
     cur.execute('SELECT * FROM region WHERE name = %s',(region, ))
     if not region:

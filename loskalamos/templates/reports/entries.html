@@ -136,13 +136,13 @@
                   <td>${data[1][i][3]}</td>
                   <td>${data[1][i][2]}</td>
                   <td>${data[1][i][4]}</td>
-                  <td>Διαθεσιμο για αναλαβη</td>
+                  <td>Διαθέσιμο για αναλαβή</td>
                   <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
-                  <input type="submit" class="btn btn-primary" value="Αναλαβη">
+                  <input type="submit" class="btn btn-primary" value="Αναλαβή">
                   </form><td>
                 </tr>
                 <tr>
-                  <td colspan="6"><b>Περιγραφη:</b> ${data[1][i][5]}</td>
+                  <td colspan="6"><b>Περιγραφή:</b> ${data[1][i][5]}</td>
                 </tr>
                     `;
               $("#nottaken").append(html);
@@ -293,7 +293,7 @@
     <table id="searchTable" class="table table-striped bg-light rounded" hidden>
       <thead>
         <tr>
-          <th>Τύπος βλαβης</th>
+          <th>Τύπος βλάβης</th>
           <th>Κοινότητα</th>
           <th>Περιοχή</th>
           <th>Διεύθυνση</th>
@@ -319,7 +319,7 @@
   <table class="table table-striped bg-light rounded">
     <thead>
       <tr>
-        <th>Τύπος βλαβης</th>
+        <th>Τύπος βλάβης</th>
         <th>Κοινότητα</th>
         <th>Περιοχή</th>
         <th>Διεύθυνση</th>
@@ -335,7 +335,7 @@
         <td>{{post['region']}}</td>
         <td>{{post['area']}}</td>
         <td>{{post['address']}}</td>
-        <td>Διαθεσιμο για αναλαβη</td>
+        <td>Διαθέσιμο για αναλαβή</td>
         <td><form method="post" action="{{url_for('reports.take', id = post['id'])}}">
         <input id="take"type="submit" class="btn btn-primary" value="Αναλαβή">
         </form></td>
@@ -355,7 +355,7 @@
     <table class="table table-striped bg-light rounded">
       <thead>
         <tr>
-          <th>Τύπος βλαβης</th>
+          <th>Τύπος βλάβης</th>
           <th>Κοινότητα</th>
           <th>Περιοχή</th>
           <th>Διεύθυνση</th>

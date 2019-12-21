@@ -35,7 +35,7 @@ def create_app(test_config=None):
     app.register_blueprint(reports.bp)
 
 
-    # a simple page that says hello
+    
 
 
     return app
