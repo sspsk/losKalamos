@@ -2,6 +2,18 @@
 {% block title %} entries {% endblock %}
 {% block myscript %}
 <script >
+  $(document).ready(function(){ //function to return corresponding areas of a region
+    $("#regionSelector").change(function(){
+      $.getJSON($SCRIPT_ROOT + '/getareas',{region : $(this).val()},function(data){
+          $("#areaSelector").empty();
+          $("#areaSelector").append('<option selected disabled>Υποπεριοχή</option>');
+        for(let i =0;i<data.length;i++){
+          $("#areaSelector").append('<option>'+data[i][1]+'</option>');
+        }
+      });
+      //kane get request me to $(this).val() kai append to html sto select kato
+    });
+  });
   var prevId ;
   function search(arg) {
 
@@ -19,9 +31,11 @@
           <td>${data[0][4]}</td>
 
 
+
         `;
         if(data[0][6] ==true){
           html += `
+          <td>${data[0][9]}</td>
           <td>Ολοκληρώθηκε απο: ${data[0][8]}</td>
           <td>-</td>
           `;
@@ -31,6 +45,7 @@
           if(data[0][7] == null){
 
             html += `
+            <td>${data[0][8]}</td>
             <td>Διαθέσιμο για αναλαβή</td>
             <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/take"}">
             <input type="submit" class="btn btn-primary" value="Αναλαβή">
@@ -85,6 +100,7 @@
           }
           $("#taken").empty();
           $("#nottaken").empty();
+          $("#completed").empty();
           if(data[0] != null){
             for(let i =0;i<data[0].length;i++){
 
@@ -94,6 +110,7 @@
                  <td>${data[0][i][3]}</td>
                  <td>${data[0][i][2]}</td>
                  <td>${data[0][i][4]}</td>
+                 <td>${data[0][i][8]}</td>
                  <td>Αναλαβή απο: ${data[0][i][7]}</td>
                  `;
                  if(data[2] == data[0][i][6]){
@@ -136,6 +153,7 @@
                   <td>${data[1][i][3]}</td>
                   <td>${data[1][i][2]}</td>
                   <td>${data[1][i][4]}</td>
+                  <td>${data[1][i][6]}</td>
                   <td>Διαθέσιμο για αναλαβή</td>
                   <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[1][i][0]+"/take"}">
                   <input type="submit" class="btn btn-primary" value="Αναλαβή">
@@ -147,6 +165,30 @@
                     `;
               $("#nottaken").append(html);
                 }
+               }
+               if(data[3] != null){
+                 for(let i =0;i<data[3].length;i++){
+
+                    var html = `
+                    <tr data-id="${data[3][i][0]}">
+                      <td>${data[3][i][1]}</td>
+                      <td>${data[3][i][3]}</td>
+                      <td>${data[3][i][2]}</td>
+                      <td>${data[3][i][4]}</td>
+                      <td>${data[3][i][8]}</td>
+                      <td>Αναλαβή απο: ${data[3][i][7]}</td>
+                      `;
+                      html += `
+                        <td>-</td>`;
+                      html += `
+                     </tr>
+                     <tr>
+                       <td colspan="6"><b>Περιγραφή:</b> ${data[3][i][5]}</td>
+                     </tr>
+                     `;
+                  $("#completed").append(html);
+
+                    }
                }
           }
           console.log(data);
@@ -209,7 +251,7 @@
   <div class="alert alert-info" role="alert">{{ message }}</div>
 
 {% endfor %}
-  {% if g.user['type'] == "admin" %}
+  {% if g.user['type'] == "admin"  %}
   <div class="row justify-content-center">
   <div class="col-5 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded"method="post" action="{{url_for('auth.register')}}">
@@ -247,6 +289,7 @@
     </form>
     </div>
     <div class="col-3 bg-light rounded" id="entriesForm">
+    <div class="row justify-content-center">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addregion')}}">
       <div class="form-group">
         <p class="h4 mb-4 text-center" >Πρόσθεση κοινότητας</p>
@@ -259,7 +302,28 @@
     </div>
     </form>
     </div>
+    {% if g.user['region'] == "admin" %}
+    <div class="row justify-content-center">
+    <form  class="bg-light rounded" method="post" action="{{url_for('auth.delRegion')}}">
+      <div class="form-group">
+        <p class="h4 mb-4 text-center" >Διαγραφή κοινότητας</p>
+        <div class="form-group">
+        <select class="form-control"  name="region" >
+          <option selected disabled>Κοινότητα</option>
+          {% for region in regions %}
+          <option>{{region['name']}}</option>
+          {%endfor%}
+        </select>
+        </div>
+     <div class="form-group">
+    <input type="submit" class="btn btn-danger btn-block my-4 primary" value="Διαγραφή">
+    </div>
+    </form>
+    </div>
+    {% endif %}
+    </div>
     <div class="col-3 bg-light rounded" id="entriesForm">
+    <div class="row justify-content-center">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addarea')}}">
       <div class="form-group">
         <p class="h4 mb-4 text-center" >Πρόσθεση περιοχής</p>
@@ -280,6 +344,32 @@
     </div>
     </form>
     </div>
+    {% if g.user['region'] == "admin" %}
+    <div class="row justify-content-center">
+    <form  class="bg-light rounded" method="post" action="{{url_for('auth.delArea')}}">
+      <div class="form-group">
+        <p class="h4 mb-4 text-center" >Διαγραφή περιοχής</p>
+      </div>
+      <div class="form-group">
+      <select class="form-control" id="regionSelector" name="region" >
+        <option selected disabled>Κοινότητα</option>
+        {% for region in regions %}
+        <option>{{region['name']}}</option>
+        {%endfor%}
+      </select>
+      </div>
+      <div class="form-group">
+        <select id="areaSelector" class="form-control"  name="area" >
+          <option selected disabled>Περιοχή</option>
+        </select>
+     </div>
+     <div class="form-group">
+    <input type="submit" class="btn btn-danger btn-block my-4 primary" value="Διαγραφή">
+    </div>
+    </form>
+    </div>
+    {%endif%}
+    </div>
     </div>
     <div class="row d-flex justify-content-center">
       <div class="col-5">
@@ -297,6 +387,7 @@
           <th>Κοινότητα</th>
           <th>Περιοχή</th>
           <th>Διεύθυνση</th>
+          <th>Καταχωρήθηκε</th>
           <th>Κατάσταση</th>
           <th>Δράση</th>
           <th
@@ -307,14 +398,50 @@
       </tbody>
     </table>
 
+    <div class="d-flex justify-content-center">
+      <h3>Ολοκληρωθήσες αναφορές</h3>
+      </div>
 
+      <table class="table table-striped bg-light rounded">
+        <thead>
+          <tr>
+            <th>Τύπος βλάβης</th>
+            <th>Κοινότητα</th>
+            <th>Περιοχή</th>
+            <th>Διεύθυνση</th>
+            <th>Καταχωρήθηκε</th>
+            <th>Κατάσταση</th>
+            <th>Δράση</th>
+
+          </tr>
+        </thead>
+        <tbody id="completed" >
+          {% for post in postscompleted %}
+          <tr data-id="{{post['id']}}" class="tableRow">
+            <td>{{ post['type'] }}</td>
+            <td>{{post['region']}}</td>
+            <td>{{post['area']}}</td>
+            <td>{{post['address']}}</td>
+            <td>{{post['created']}}</td>
+            <td>Ολοκληρώθηκε απο: {{post['username']}}</td>
+            <td>-</td>
+
+          </tr>
+          <tr>
+            <td colspan="6"><b>Περιγραφή:</b> {{post['description']}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="container" align="left">
+    		<a href="/downloads?posts=completed" target="blank"><button class='btn-info btn-default'>Download</button></a>
+       </div>
   {% endif %}
-
 
 <div class="d-flex justify-content-center">
   <h3>Διαθέσιμες αναφορές</h3>
   </div>
-  <table></table>
+
 
   <table class="table table-striped bg-light rounded">
     <thead>
@@ -323,6 +450,7 @@
         <th>Κοινότητα</th>
         <th>Περιοχή</th>
         <th>Διεύθυνση</th>
+        <th>Καταχωρήθηκε</th>
         <th>Κατάσταση</th>
         <th>Δράση</th>
 
@@ -335,6 +463,7 @@
         <td>{{post['region']}}</td>
         <td>{{post['area']}}</td>
         <td>{{post['address']}}</td>
+        <td>{{post['created']}}</td>
         <td>Διαθέσιμο για αναλαβή</td>
         <td><form method="post" action="{{url_for('reports.take', id = post['id'])}}">
         <input id="take"type="submit" class="btn btn-primary" value="Αναλαβή">
@@ -347,6 +476,9 @@
 
     </tbody>
   </table>
+  <div class="container" align="left">
+		<a href="/downloads?posts=nottaken" target="blank"><button class='btn-info btn-default'>Download</button></a>
+   </div>
 
   <div class="d-flex justify-content-center">
     <h3>Αναφορές υπο αναλαβή</h3>
@@ -359,6 +491,7 @@
           <th>Κοινότητα</th>
           <th>Περιοχή</th>
           <th>Διεύθυνση</th>
+          <th>Καταχωρήθηκε</th>
           <th>Κατάσταση</th>
           <th>Δράση</th>
 
@@ -371,6 +504,7 @@
           <td>{{post['region']}}</td>
           <td>{{post['area']}}</td>
           <td>{{post['address']}}</td>
+          <td>{{post['created']}}</td>
           <td>Αναλαβή απο: {{post['username']}}</td>
           {% if post['takenby'] == g.user['id'] %}
           <td>
@@ -397,7 +531,9 @@
         {% endfor %}
       </tbody>
     </table>
-
+    <div class="container" align="left">
+  		<a href="/downloads?posts=taken" target="blank"><button class='btn-info btn-default'>Download</button></a>
+     </div>
   </div>
 
 

@@ -37,7 +37,7 @@ def init_db():
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    init_db()
+    #init_db()
     password = input('Set admin password: ')
     password  = generate_password_hash(password)
     db = get_db()

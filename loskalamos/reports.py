@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response, session
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response, session, send_file
 
 from werkzeug.exceptions import abort
 
@@ -6,10 +6,12 @@ from loskalamos.db import get_db
 import psycopg2.extras
 import json
 import time
+import xlsxwriter
 bp = Blueprint('reports',__name__)
 
 
-
+def getKey(item):#function to return key to sort tuples
+    return item[1]
 
 
 @bp.route('/report', methods = ('POST', ))
@@ -57,30 +59,58 @@ def entries():
     report_id = request.args.get('report_id')
     res = None;
     if g.user['type'] == "admin":
-        if report_id is None:
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
-            poststaken = cur.fetchall()
-            cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
-            postsnottaken = cur.fetchall()
-        else:
-            if(report_id == ""):
-                return Response(json.dumps([None,g.user['id']]), mimetype='application/json')
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, done, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
-            poststaken = cur.fetchone()
-            cur.execute('SELECT id, type, area, region, address, description, done, takenby FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
-            postsnottaken = cur.fetchone()
-            if poststaken is None:
-                res = postsnottaken
+        if g.user['region'] == "admin": #show all in all regions
+            if report_id is None:
+                cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
+                poststaken = cur.fetchall()
+                cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
+                postsnottaken = cur.fetchall()
+                cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(True,))
+                postscompleted = cur.fetchall()
             else:
-                res = poststaken
-            return Response(json.dumps([res,g.user['id']]), mimetype='application/json')
+                if(report_id == ""):
+                    cur.close()
+                    return Response(json.dumps([None,g.user['id']],default=str), mimetype='application/json')
+                cur.execute('SELECT p.id, p.type, area, p.region, address, description, done, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s',(report_id,))
+                poststaken = cur.fetchone()
+                cur.execute('SELECT id, type, area, region, address, description, done, takenby,created FROM report WHERE takenby IS NULL AND id = %s',(report_id,))
+                postsnottaken = cur.fetchone()
+                if poststaken is None:
+                    res = postsnottaken
+                else:
+                    res = poststaken
+                cur.close()
+                return Response(json.dumps([res,g.user['id']],default=str), mimetype='application/json')
+        else: #show all in admin's region
+            if report_id is None:
+                cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(False,g.user['region']))
+                poststaken = cur.fetchall()
+                cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND done = %s AND region = %s ORDER BY created ASC',(False,g.user['region']))
+                postsnottaken = cur.fetchall()
+                cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(True,g.user['region']))
+                postscompleted = cur.fetchall()
+            else:
+                if(report_id == ""):
+                    cur.close()
+                    return Response(json.dumps([None,g.user['id']], default=str), mimetype='application/json')
+                cur.execute('SELECT p.id, p.type, area, p.region, address, description, done, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE p.id = %s AND p.region = %s',(report_id,g.user['region']))
+                poststaken = cur.fetchone()
+                cur.execute('SELECT id, type, area, region, address, description, done, takenby,created FROM report WHERE takenby IS NULL AND id = %s AND region = %s',(report_id,g.user['region']))
+                postsnottaken = cur.fetchone()
+                if poststaken is None:
+                    res = postsnottaken
+                else:
+                    res = poststaken
+                cur.close()
+                return Response(json.dumps([res,g.user['id']],default = str), mimetype='application/json')
     else:
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
         poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
+        cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
         postsnottaken = cur.fetchall()
+        postscompleted = []
     cur.close()
-    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=regions )
+    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=sorted(regions,key=getKey) ,postscompleted = postscompleted)
 
 
 def get_report(id):
@@ -141,6 +171,67 @@ def undo(id):
     db.commit()
     return redirect(url_for('reports.entries'))
 
+#url to download reports
+
+@bp.route('/downloads')
+def download():
+    db=get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    posts = request.args.get('posts')
+    if g.user['type'] == "admin":
+        if g.user['region'] == "admin": #show all in all regions
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
+            poststaken = cur.fetchall()
+            cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
+            postsnottaken = cur.fetchall()
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description,  username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(True,))
+            postscompleted = cur.fetchall()
+
+        else:   #show all in admin's region
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(False,g.user['region']))
+            poststaken = cur.fetchall()
+            cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND done = %s  AND region = %s ORDER BY created ASC',(False,g.user['region']))
+            postsnottaken = cur.fetchall()
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(True,g.user['region']))
+            postscompleted = cur.fetchall()
+    else:
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
+        poststaken = cur.fetchall()
+        cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
+        postsnottaken = cur.fetchall()
+
+    row = 0
+    col = 0
+
+    workbook = xlsxwriter.Workbook('completedReports.xlsx')
+    worksheet = workbook.add_worksheet()
+    if posts == "completed":
+        print(type(postscompleted[0]))
+        for item in postscompleted:
+            for i in range(0,len(item)):
+                worksheet.write(row,col + i,str(item[i]))
+            worksheet.write(row,col+len(item),"Ολοκληρώθηκε")
+            row +=1
+    elif posts =="taken":
+        for item in poststaken:
+            for i in range(0,len(item)):
+                worksheet.write(row,col + i,str(item[i]))
+            worksheet.write(row,col+len(item),"Υπο αναλαβή")
+            row +=1
+    else:
+        for item in postsnottaken:
+            for i in range(0,len(item)):
+                worksheet.write(row,col + i,str(item[i]))
+            worksheet.write(row,col+len(item),"Διαθέσιμο")
+            row +=1
+    cur.close()
+    workbook.close()
+    return send_file('\losKalamos\completedReports.xlsx', attachment_filename='completedReports.xlsx')
+
+
+
+
+
 
 @bp.route('/update')
 def update():
@@ -166,14 +257,25 @@ def update():
         if hits >= 30:
             return Response(json.dumps(None),mimetype='application/json')
     if g.user['type'] == "admin":
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
-        poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
-        postsnottaken = cur.fetchall()
+        if g.user['region'] == "admin": #show all in all regions
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(False,))
+            poststaken = cur.fetchall()
+            cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND done = %s ORDER BY created ASC',(False,))
+            postsnottaken = cur.fetchall()
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY created ASC',(True,))
+            postscompleted = cur.fetchall()
+
+        else:   #show all in admin's region
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(False,g.user['region']))
+            poststaken = cur.fetchall()
+            cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND done = %s  AND region = %s ORDER BY created ASC',(False,g.user['region']))
+            postsnottaken = cur.fetchall()
+            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(True,g.user['region']))
+            postscompleted = cur.fetchall()
     else:
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
         poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
+        cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
         postsnottaken = cur.fetchall()
     cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
     print('EGINE 0 SE ADMIN')
@@ -184,4 +286,4 @@ def update():
         poststaken = None
     if not postsnottaken:
         postsnottaken = None
-    return Response(json.dumps([poststaken,postsnottaken,g.user['id']]),mimetype='application/json')
+    return Response(json.dumps([poststaken,postsnottaken,g.user['id'],postscompleted], default = str),mimetype='application/json')

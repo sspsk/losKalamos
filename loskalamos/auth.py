@@ -9,6 +9,9 @@ from loskalamos.db import get_db
 
 bp = Blueprint('auth', __name__)
 
+def getKey(item):#function to return key to sort tuples
+    return item[1]
+
 @bp.route('/addregion', methods=('POST', ))
 def addregion():
     db = get_db()
@@ -61,7 +64,7 @@ def getareas():
     region_id = cur.fetchone()[0]
     cur.execute('SELECT * FROM area WHERE region_id = %s',(region_id,))
     areas = cur.fetchall()
-    return Response(json.dumps(areas), mimetype='application/json')
+    return Response(json.dumps(sorted(areas,key=getKey)), mimetype='application/json')       #return sorted the areas of some region
 
 @bp.route('/register', methods=('POST', ))
 def register():
@@ -131,7 +134,7 @@ def index():
     cur.execute('SELECT * FROM region')
     regions = cur.fetchall()
     cur.close()
-    return render_template('auth/index.html', regions = regions)
+    return render_template('auth/index.html', regions=sorted(regions,key=getKey)) #return sorted the regions
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -154,3 +157,31 @@ def logout():
     db.commit()
     cur.close()
     return redirect(url_for('auth.index'))
+
+
+@bp.route('/delRegion',methods = ('POST',))
+def delRegion():
+    region = request.form['region']
+    print(region)
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM region WHERE name = %s',(region,))
+    res = cur.fetchone()
+    cur.execute('DELETE FROM region WHERE name = %s',(region,))
+    db.commit()
+    cur.execute('DELETE FROM area WHERE region_id = %s ',(res['id'],))
+    db.commit()
+    cur.close()
+    return redirect(url_for('reports.entries'))
+
+@bp.route('/delArea', methods=('POST',))
+def delArea():
+    area = request.form['area']
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('DELETE FROM area WHERE name = %s',(area,))
+    db.commit()
+    cur.close()
+    return redirect(url_for('reports.entries'))
+#delete region
+#delete area
