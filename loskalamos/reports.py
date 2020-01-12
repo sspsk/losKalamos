@@ -196,9 +196,9 @@ def download():
             cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created, contact_name, contact_phone FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY created ASC',(True,g.user['region']))
             postscompleted = cur.fetchall()
     else:
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created,  FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
+        cur.execute('SELECT p.id, p.type, area, p.region, address, description, username, created, contact_name, contact_phone FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY created ASC ',(g.user['type'], g.user['region'], g.user['id'], False))
         poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description, created FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
+        cur.execute('SELECT id, type, area, region, address, description, created, contact_name, contact_phone FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY created ASC',(g.user['type'], g.user['region'], False))
         postsnottaken = cur.fetchall()
 
     row = 0
