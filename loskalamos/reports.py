@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response, session, send_file
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response, session, send_file, current_app
 
 from werkzeug.exceptions import abort
 
@@ -7,6 +7,7 @@ import psycopg2.extras
 import json
 import time
 import xlsxwriter
+import os
 bp = Blueprint('reports',__name__)
 
 
@@ -203,7 +204,8 @@ def download():
     row = 0
     col = 0
 
-    workbook = xlsxwriter.Workbook('completedReports.xlsx')
+
+    workbook = xlsxwriter.Workbook(os.path.join(current_app.instance_path, 'completedReports.xlsx'))
     worksheet = workbook.add_worksheet()
     if posts == "completed":
         print(type(postscompleted[0]))
@@ -226,7 +228,7 @@ def download():
             row +=1
     cur.close()
     workbook.close()
-    return send_file('\losKalamos\completedReports.xlsx', attachment_filename='completedReports.xlsx')
+    return send_file(os.path.join(current_app.instance_path, 'completedReports.xlsx'), attachment_filename='completedReports.xlsx')
 
 
 

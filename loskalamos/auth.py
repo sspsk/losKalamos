@@ -1,6 +1,6 @@
 import functools
 import psycopg2.extras
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, Response
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, Response, current_app
 import json
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -105,6 +105,7 @@ def register():
 
 @bp.route('/', methods=('GET','POST'))
 def index():
+    print(current_app.instance_path);
     db = get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
     if request.method == 'POST':
