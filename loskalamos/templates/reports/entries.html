@@ -11,7 +11,6 @@
           $("#areaSelector").append('<option>'+data[i][1]+'</option>');
         }
       });
-      //kane get request me to $(this).val() kai append to html sto select kato
     });
   });
   var prevId ;
@@ -25,6 +24,7 @@
         console.log(data[0]);
         var html = `
         <tr data-id="${data[0][0]}">
+          <td>${data[0][0]}</td>
           <td>${data[0][1]}</td>
           <td>${data[0][3]}</td>
           <td>${data[0][2]}</td>
@@ -79,7 +79,8 @@
         }
         html += `</tr>
         <tr>
-          <td colspan="6"><b>Περιγραφή:</b> ${data[0][5]}</td>
+          <td colspan="5"><b>Περιγραφή:</b> ${data[0][5]}</td>
+          <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[0][9]}</td>
         </tr>
         `;
 
@@ -106,6 +107,7 @@
 
                var html = `
                <tr data-id="${data[0][i][0]}">
+                 <td>${data[0][i][0]}</td>
                  <td>${data[0][i][1]}</td>
                  <td>${data[0][i][3]}</td>
                  <td>${data[0][i][2]}</td>
@@ -126,6 +128,7 @@
                    <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][i][0]+"/undo"}">
                    <input type="submit" class="btn btn-info" value="Απόριψη">
                    </form>
+
                    </div>
                  </div>
                  </td>
@@ -135,10 +138,12 @@
                    html += `
                    <td>-</td>`;
                  }
+
                 html += `
                 </tr>
                 <tr>
-                  <td colspan="6"><b>Περιγραφή:</b> ${data[0][i][5]}</td>
+                  <td colspan="5"><b>Περιγραφή:</b> ${data[0][i][5]}</td>
+                  <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[0][i][9]}</td>
                 </tr>
                 `;
              $("#taken").append(html);
@@ -149,6 +154,7 @@
             for(let i =0;i<data[1].length;i++){
               var html = `
                 <tr data-id="${data[1][i][0]}">
+                  <td>${data[1][i][0]}</td>
                   <td>${data[1][i][1]}</td>
                   <td>${data[1][i][3]}</td>
                   <td>${data[1][i][2]}</td>
@@ -160,7 +166,8 @@
                   </form><td>
                 </tr>
                 <tr>
-                  <td colspan="6"><b>Περιγραφή:</b> ${data[1][i][5]}</td>
+                  <td colspan="5"><b>Περιγραφή:</b> ${data[1][i][5]}</td>
+                  <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[1][i][7]}</td>
                 </tr>
                     `;
               $("#nottaken").append(html);
@@ -171,6 +178,7 @@
 
                     var html = `
                     <tr data-id="${data[3][i][0]}">
+                      <td>${data[3][i][0]}</td>
                       <td>${data[3][i][1]}</td>
                       <td>${data[3][i][3]}</td>
                       <td>${data[3][i][2]}</td>
@@ -183,7 +191,8 @@
                       html += `
                      </tr>
                      <tr>
-                       <td colspan="6"><b>Περιγραφή:</b> ${data[3][i][5]}</td>
+                       <td colspan="5"><b>Περιγραφή:</b> ${data[3][i][5]}</td>
+                       <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[3][i][9]}</td>
                      </tr>
                      `;
                   $("#completed").append(html);
@@ -398,44 +407,7 @@
       </tbody>
     </table>
 
-    <div class="d-flex justify-content-center">
-      <h3>Ολοκληρωθήσες αναφορές</h3>
-      </div>
 
-      <table class="table table-striped bg-light rounded">
-        <thead>
-          <tr>
-            <th>Τύπος βλάβης</th>
-            <th>Κοινότητα</th>
-            <th>Περιοχή</th>
-            <th>Διεύθυνση</th>
-            <th>Καταχωρήθηκε</th>
-            <th>Κατάσταση</th>
-            <th>Δράση</th>
-
-          </tr>
-        </thead>
-        <tbody id="completed" >
-          {% for post in postscompleted %}
-          <tr data-id="{{post['id']}}" class="tableRow">
-            <td>{{ post['type'] }}</td>
-            <td>{{post['region']}}</td>
-            <td>{{post['area']}}</td>
-            <td>{{post['address']}}</td>
-            <td>{{post['created']}}</td>
-            <td>Ολοκληρώθηκε απο: {{post['username']}}</td>
-            <td>-</td>
-
-          </tr>
-          <tr>
-            <td colspan="6"><b>Περιγραφή:</b> {{post['description']}}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <div class="container" align="left">
-    		<a href="/downloads?posts=completed" target="blank"><button class='btn-info btn-default'>Download</button></a>
-       </div>
   {% endif %}
 
 <div class="d-flex justify-content-center">
@@ -443,9 +415,10 @@
   </div>
 
 
-  <table class="table table-striped bg-light rounded">
+  <table colspan="8" class="table table-striped bg-light rounded">
     <thead>
       <tr>
+        <th>A/A</th>
         <th>Τύπος βλάβης</th>
         <th>Κοινότητα</th>
         <th>Περιοχή</th>
@@ -459,6 +432,7 @@
     <tbody id="nottaken" >
       {% for post in postsnottaken %}
       <tr data-id="{{post['id']}}" class="tableRow">
+        <td>{{ post['id'] }}</td>
         <td >{{ post['type'] }}</td>
         <td>{{post['region']}}</td>
         <td>{{post['area']}}</td>
@@ -470,7 +444,8 @@
         </form></td>
       </tr>
       <tr>
-        <td colspan="6"><b>Περιγραφή:</b> {{post['description']}}</td>
+        <td colspan="5" maxlength="40"><b>Περιγραφή:</b> {{post['description']}}</td>
+        <td colspan="3"><b>Ονοματεπώνυμο:</b> {{post['contact_name']}}</td>
       </tr>
       {% endfor %}
 
@@ -484,9 +459,10 @@
     <h3>Αναφορές υπο αναλαβή</h3>
     </div>
 
-    <table class="table table-striped bg-light rounded">
+    <table colspan="8" class="table table-striped bg-light rounded">
       <thead>
         <tr>
+          <th>A/A</th>
           <th>Τύπος βλάβης</th>
           <th>Κοινότητα</th>
           <th>Περιοχή</th>
@@ -500,6 +476,7 @@
       <tbody id="taken" >
         {% for post in poststaken %}
         <tr data-id="{{post['id']}}" class="tableRow">
+          <td >{{ post['id'] }}</td>
           <td>{{ post['type'] }}</td>
           <td>{{post['region']}}</td>
           <td>{{post['area']}}</td>
@@ -521,12 +498,13 @@
           </div>
           </div>
           </td>
-          {% else %}
+          {%else%}
           <td>-</td>
-          {% endif %}
+          {%endif%}
         </tr>
         <tr>
-          <td colspan="6"><b>Περιγραφή:</b> {{post['description']}}</td>
+          <td colspan="5"><b>Περιγραφή:</b> {{post['description']}}</td>
+          <td colspan="3"><b>Ονοματεπώνυμο:</b> {{post['contact_name']}}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -534,7 +512,49 @@
     <div class="container" align="left">
   		<a href="/downloads?posts=taken" target="blank"><button class='btn-info btn-default'>Download</button></a>
      </div>
+     {% if g.user['type'] == "admin" %}
+     <div class="d-flex justify-content-center">
+       <h3>Ολοκληρωθήσες αναφορές</h3>
+       </div>
+
+       <table colspan="8" class="table table-striped bg-light rounded">
+         <thead>
+           <tr>
+             <th>A/A</th>
+             <th>Τύπος βλάβης</th>
+             <th>Κοινότητα</th>
+             <th>Περιοχή</th>
+             <th>Διεύθυνση</th>
+             <th>Καταχωρήθηκε</th>
+             <th>Κατάσταση</th>
+             <th>Δράση</th>
+
+           </tr>
+         </thead>
+         <tbody id="completed" >
+           {% for post in postscompleted %}
+           <tr data-id="{{post['id']}}" class="tableRow">
+             <td >{{ post['id'] }}</td>
+             <td>{{ post['type'] }}</td>
+             <td>{{post['region']}}</td>
+             <td>{{post['area']}}</td>
+             <td>{{post['address']}}</td>
+             <td>{{post['created']}}</td>
+             <td>Ολοκληρώθηκε απο: {{post['username']}}</td>
+             <td>-</td>
+           </tr>
+           <tr>
+             <td colspan="5"><b>Περιγραφή:</b> {{post['description']}}</td>
+             <td colspan="3"><b>Ονοματεπώνυμο:</b> {{post['contact_name']}}</td>
+           </tr>
+           {% endfor %}
+         </tbody>
+       </table>
+       <div class="container" align="left">
+     		<a href="/downloads?posts=completed" target="blank"><button class='btn-info btn-default'>Download</button></a>
+        </div>
   </div>
+  {%endif%}
 
 
 {% endblock %}
