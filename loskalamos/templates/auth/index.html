@@ -14,7 +14,59 @@
       });
       //kane get request me to $(this).val() kai append to html sto select kato
     });
+    $("#searchBtn").click(function(){
+        var arg = $("#searchText").val();
+        search(arg);
+    });
+
+
+    $("#cancelBtn").on("click",function(){
+      $("#searchRes").empty();
+      $("#searchTable").attr("hidden",true);
+    });
   });
+
+  function search(arg) {
+
+    $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
+
+      if(data[0] != null){
+        $("#searchRes").empty();
+        $("#searchTable").removeAttr('hidden');
+        console.log(data[0]);
+        var html = `
+        <tr data-id="${data[0][0]}">
+          <td>${data[0][0]}</td>
+          <td>${data[0][1]}</td>
+          <td>${data[0][3]}</td>
+          <td>${data[0][2]}</td>
+          <td>${data[0][4]}</td>
+          `;
+        if(data[0][7] == null){ //if not taken
+          html += `
+        <td>${data[0][8]}</td>
+        <td>Σε αναμονή</td> `;
+        }
+        else{
+          html +=`<td>${data[0][8]}</td>`;
+          if(data[0][6] == true){ //if taken and done
+              html += `<td>Ολοκληρώθηκε</td>`;
+          }
+          else{ //if taken and not done
+            html += `<td>Υπο αναλαβή</td>`;
+          }
+            }
+        html += `</tr>
+        <tr>
+          <td colspan="5"><b>Περιγραφή:</b> ${data[0][5]}</td>
+          <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[0][9]}</td>
+        </tr>
+        `;
+
+        $("#searchRes").append(html);
+      }
+    });
+  }
 </script>
 {% endblock %}
 {% block content %}
@@ -117,6 +169,45 @@
   {% for message in get_flashed_messages() %}
       <div class="alert alert-info">{{ message }}</div>
   {% endfor %}
+  <div class="row row-fluid d-flex justify-content-center">
+    <div id="searchCol"class="col-lg-5 bg-light rounded">
+      <div class="row row-fluid ">
+        <div class="col-lg-12 d-flex justify-content-center ">
+          <h4>Αναζήτηση με Α/Α</h4>
+          </div>
+      </div>
+      <div class="row row-fluid">
+        <div class="col-lg-6 ">
+          <input  id="searchText" class="form-control rounded" type="text" placeholder="Ιd αναφορας" aria-label="Search" required>
+          </div>
+          <div class="col-lg-3 d-flex justify-content-center ">
+            <button id="searchBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αναζήτηση</button>
+            </div>
+            <div class="col-lg-3 d-flex justify-content-center ">
+              <button id="cancelBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αφαίρεση αναζήτησης</button>
+            </div>
+      </div>
+      </div>
+  </div>
+
+  <table id="searchTable" class="table table-striped bg-light rounded" hidden>
+    <thead>
+      <tr>
+        <th>A/A</th>
+        <th>Τύπος βλάβης</th>
+        <th>Κοινότητα</th>
+        <th>Περιοχή</th>
+        <th>Διεύθυνση</th>
+        <th>Καταχωρήθηκε</th>
+        <th>Κατάσταση</th>
+
+        <th
+      </tr>
+    </thead>
+    <tbody id="searchRes">
+
+    </tbody>
+  </table>
 
 </div>
 

@@ -13,82 +13,7 @@
       });
     });
   });
-  var prevId ;
-  function search(arg) {
 
-    $.getJSON($SCRIPT_ROOT+'/entries',{report_id : arg},function(data){
-
-      if(data[0] != null){
-        $("#searchRes").empty();
-        $("#searchTable").removeAttr('hidden');
-        console.log(data[0]);
-        var html = `
-        <tr data-id="${data[0][0]}">
-          <td>${data[0][0]}</td>
-          <td>${data[0][1]}</td>
-          <td>${data[0][3]}</td>
-          <td>${data[0][2]}</td>
-          <td>${data[0][4]}</td>
-
-
-
-        `;
-        if(data[0][6] ==true){
-          html += `
-          <td>${data[0][9]}</td>
-          <td>Ολοκληρώθηκε απο: ${data[0][8]}</td>
-          <td>-</td>
-          `;
-        }
-        else{
-
-          if(data[0][7] == null){
-
-            html += `
-            <td>${data[0][8]}</td>
-            <td>Διαθέσιμο για αναλαβή</td>
-            <td><form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/take"}">
-            <input type="submit" class="btn btn-primary" value="Αναλαβή">
-            </form><td>
-            `;
-          }
-          else{
-            html += `<td>Αναλαβή απο: ${data[0][8]}</td> `;
-            if(data[1] == data[0][7]){
-              html += `
-              <td>
-              <div class="row">
-              <div class="col">
-              <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/done"}">
-              <input type="submit" class="btn btn-danger" value="Ολοκλήρωση">
-              </form>
-              </div>
-              <div class="col">
-              <form method="post" action="${$SCRIPT_ROOT+"/"+data[0][0]+"/undo"}">
-              <input type="submit" class="btn btn-info" value="Απόριψη">
-              </form>
-              </div>
-            </div>
-            </td>
-              `;
-            }
-            else{
-              html += `<td>-</td>`;
-            }
-          }
-        }
-        html += `</tr>
-        <tr>
-          <td colspan="5"><b>Περιγραφή:</b> ${data[0][5]}</td>
-          <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[0][9]}</td>
-        </tr>
-        `;
-
-        $("#searchRes").append(html);
-      }
-    });
-    prevId = arg;
-  }
   function longPolling(){
     $.ajax({
       url : $SCRIPT_ROOT + '/update',
@@ -96,9 +21,6 @@
       dataType: 'json',
       success : function(data){
         if(data != null) {
-          if(prevId != undefined){
-            search(prevId);
-          }
           $("#taken").empty();
           $("#nottaken").empty();
           $("#completed").empty();
@@ -201,9 +123,7 @@
                }
           }
           console.log(data);
-
-
-      },
+        },
       error:function(jqXHR, textStatus, errorThrown){
         if(textStatus==="timeout") {
           console.log('timeout');
@@ -222,18 +142,6 @@
   }
     $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){});sessionStorage.setItem("pos",window.pageYOffset);});
     setTimeout(function(){longPolling();},4000);
-    $("#searchBtn").click(function(){
-        var arg = $("#searchText").val();
-        search(arg);
-    });
-
-
-    $("#cancelBtn").on("click",function(){
-      $("#searchRes").empty();
-      $("#searchTable").attr("hidden",true);
-      prevId = undefined;
-    });
-
   });
 
 
@@ -261,8 +169,8 @@
 
 {% endfor %}
   {% if g.user['type'] == "admin"  %}
-  <div class="row justify-content-center">
-  <div class="col-5 bg-light rounded" id="entriesForm">
+  <div id="searchBox"class="row-fluid d-flex justify-content-center">
+  <div class="col-lg-4 bg-light rounded" id="entriesForm">
     <form  class="bg-light rounded"method="post" action="{{url_for('auth.register')}}">
       <div class="form-group">
         <p class="h4 mb-4 text-center" >Δημιουργία τεχνικού</p>
@@ -297,7 +205,7 @@
      </div>
     </form>
     </div>
-    <div class="col-3 bg-light rounded" id="entriesForm">
+    <div class="col-lg-4 bg-light rounded" id="entriesForm">
     <div class="row justify-content-center">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addregion')}}">
       <div class="form-group">
@@ -331,7 +239,8 @@
     </div>
     {% endif %}
     </div>
-    <div class="col-3 bg-light rounded" id="entriesForm">
+    </div>
+    <div class="col-lg-4 bg-light rounded" id="entriesForm">
     <div class="row justify-content-center">
     <form  class="bg-light rounded" method="post" action="{{url_for('auth.addarea')}}">
       <div class="form-group">
@@ -380,34 +289,6 @@
     {%endif%}
     </div>
     </div>
-    <div class="row d-flex justify-content-center">
-      <div class="col-5">
-          <input  id="searchText" class="form-control rounded" type="text" placeholder="Ιd αναφορας" aria-label="Search" required>
-          <button id="searchBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αναζήτηση</button>
-          <button id="cancelBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αφαίρεση αναζήτησης</button>
-
-      </div>
-    </div>
-
-    <table id="searchTable" class="table table-striped bg-light rounded" hidden>
-      <thead>
-        <tr>
-          <th>Τύπος βλάβης</th>
-          <th>Κοινότητα</th>
-          <th>Περιοχή</th>
-          <th>Διεύθυνση</th>
-          <th>Καταχωρήθηκε</th>
-          <th>Κατάσταση</th>
-          <th>Δράση</th>
-          <th
-        </tr>
-      </thead>
-      <tbody id="searchRes">
-
-      </tbody>
-    </table>
-
-
   {% endif %}
 
 <div class="d-flex justify-content-center">
@@ -415,7 +296,7 @@
   </div>
 
 
-  <table colspan="8" class="table table-striped bg-light rounded">
+  <table class="table table-striped bg-light rounded">
     <thead>
       <tr>
         <th>A/A</th>
@@ -455,11 +336,11 @@
 		<a href="/downloads?posts=nottaken" target="blank"><button class='btn-info btn-default'>Download</button></a>
    </div>
 
-  <div class="d-flex justify-content-center">
+  <div class="col-lg-12 d-flex justify-content-center">
     <h3>Αναφορές υπο αναλαβή</h3>
     </div>
 
-    <table colspan="8" class="table table-striped bg-light rounded">
+    <table class="table table-striped bg-light rounded">
       <thead>
         <tr>
           <th>A/A</th>
@@ -517,7 +398,7 @@
        <h3>Ολοκληρωθήσες αναφορές</h3>
        </div>
 
-       <table colspan="8" class="table table-striped bg-light rounded">
+       <table class="table table-striped bg-light rounded">
          <thead>
            <tr>
              <th>A/A</th>
@@ -541,7 +422,15 @@
              <td>{{post['address']}}</td>
              <td>{{post['created']}}</td>
              <td>Ολοκληρώθηκε απο: {{post['username']}}</td>
+             {%if g.user['region']=="admin"%}
+             <td>
+             <form method="post" action="{{url_for('reports.delete', id = post['id'])}}">
+             <input type="submit" class="btn btn-danger" value="Διαγραφή">
+             </form>
+             </td>
+             {%else%}
              <td>-</td>
+             {%endif%}
            </tr>
            <tr>
              <td colspan="5"><b>Περιγραφή:</b> {{post['description']}}</td>

@@ -17,3 +17,6 @@ body {
 #searchBtn, #searchText, #showallBtn, #searchTable {
   margin : 5px;
 }
+#searchCol{
+  padding-bottom: 5px;
+}
