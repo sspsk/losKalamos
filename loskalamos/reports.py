@@ -257,35 +257,9 @@ def update():
         res=cur.fetchone()['check_bit']
         if hits >= 30:
             return Response(json.dumps(None),mimetype='application/json')
-    if g.user['type'] == "admin":
-        if g.user['region'] == "admin": #show all in all regions
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created,  p.contact_name FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY id DESC',(False,))
-            poststaken = cur.fetchall()
-            cur.execute('SELECT id, type, area, region, address, description, created, contact_name FROM report WHERE takenby IS NULL AND done = %s ORDER BY id DESC',(False,))
-            postsnottaken = cur.fetchall()
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created, p.contact_name FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s ORDER BY id DESC',(True,))
-            postscompleted = cur.fetchall()
 
-        else:   #show all in admin's region
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created,  p.contact_name FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY id DESC',(False,g.user['region']))
-            poststaken = cur.fetchall()
-            cur.execute('SELECT id, type, area, region, address, description, created, contact_name FROM report WHERE takenby IS NULL AND done = %s  AND region = %s ORDER BY id DESC',(False,g.user['region']))
-            postsnottaken = cur.fetchall()
-            cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created, p.contact_name FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY id DESC',(True,g.user['region']))
-            postscompleted = cur.fetchall()
-    else:
-        cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created, p.contact_name FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY id DESC ',(g.user['type'], g.user['region'], g.user['id'], False))
-        poststaken = cur.fetchall()
-        cur.execute('SELECT id, type, area, region, address, description, created, contact_name FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY id DESC',(g.user['type'], g.user['region'], False))
-        postsnottaken = cur.fetchall()
-        postscompleted =None
     cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
     print('EGINE 0 SE ADMIN')
     db.commit()
     cur.close()
-
-    if not poststaken:
-        poststaken = None
-    if not postsnottaken:
-        postsnottaken = None
-    return Response(json.dumps([poststaken,postsnottaken,g.user['id'],postscompleted], default = str),mimetype='application/json')
+    return Response(json.dumps([1], default = str),mimetype='application/json')
