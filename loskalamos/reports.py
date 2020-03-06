@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for, Response, session, send_file, current_app
 
 from werkzeug.exceptions import abort
-
+#inside nojs branch
 from loskalamos.db import get_db
 import psycopg2.extras
 import json
