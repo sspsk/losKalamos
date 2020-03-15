@@ -8,6 +8,8 @@ import json
 import time
 import xlsxwriter
 import os
+import redis
+import random
 bp = Blueprint('reports',__name__)
 
 
@@ -27,6 +29,7 @@ def report():
     contact_phone = request.form['contact_phone']
     db = get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    r = redis.Redis(db=1)
     error = None
 
     if not type:
@@ -42,7 +45,12 @@ def report():
     if error is None:
         cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone,False))
         id = cur.fetchone()['id']
-        cur.execute('UPDATE update_check SET check_bit = 1')
+        keys = r.keys()
+        with r.pipeline() as pipe:
+            pipe.multi()
+            for key in keys:
+                pipe.set(key, 1)
+            pipe.execute()
         db.commit()
         flash('Επιτυχημένη αναφορά. Id αναφοράς: {1}'.format(contact_name,id))
 
@@ -236,30 +244,22 @@ def download():
 
 @bp.route('/update')
 def update():
-    db = get_db()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
-    onLeave = request.args.get('onLeave')
-    print(onLeave)
-    if onLeave == "true":
-        cur.execute('UPDATE update_check SET check_bit = 1 WHERE username = %s',(g.user['username'],))
-        print('EGINE ENA APO FAKE')
-        db.commit()
-        print("terminating both requests")
-        return Response(json.dumps(None),mimetype='application/json')
-    cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-    res=cur.fetchone()['check_bit']
+    r = redis.Redis(db=1)
+    random.seed()
+    mykey = random.randint(1,100)
+    while(r.exists(mykey)):
+        mykey = random.randint(1,100)
+    r.set(mykey,0)
+    print("pass")
     hits = 1
+    res=0
     while(res == 0):
         time.sleep(1)
         print(hits)
         hits +=1
-        cur.execute('SELECT * FROM update_check WHERE username = %s',(g.user['username'],))
-        res=cur.fetchone()['check_bit']
+        res = int(r.get(mykey))
         if hits >= 30:
+            r.delete(mykey)
             return Response(json.dumps(None),mimetype='application/json')
-
-    cur.execute('UPDATE update_check SET check_bit = 0 WHERE username = %s',(g.user['username'],))
-    print('EGINE 0 SE ADMIN')
-    db.commit()
-    cur.close()
+    r.delete(mykey)
     return Response(json.dumps([1], default = str),mimetype='application/json')
