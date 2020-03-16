@@ -30,7 +30,6 @@
           console.log('timeout');
         }
       },
-      complete : longPolling,
       timeout : 30000
     });
 
@@ -41,7 +40,7 @@
     window.scrollTo(0, sessionStorage.getItem("pos"));
     console.log(sessionStorage.getItem("pos"));
   }
-    $(window).on("beforeunload",function(){  $.getJSON($SCRIPT_ROOT+'/update',{onLeave : true},function(data){});sessionStorage.setItem("pos",window.pageYOffset);});
+    $(window).on("beforeunload",function(){ sessionStorage.setItem("pos",window.pageYOffset);});
     setTimeout(function(){longPolling();},4000);
   });
 

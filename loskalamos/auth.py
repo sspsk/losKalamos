@@ -2,7 +2,7 @@ import functools
 import psycopg2.extras
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, Response, current_app
 import json
-
+import redis
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from loskalamos.db import get_db
@@ -108,6 +108,7 @@ def index():
     print(current_app.instance_path);
     db = get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -126,9 +127,7 @@ def index():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
-            cur.execute('UPDATE update_check SET refreshed = 0 WHERE username = %s',(user['username'],))
-            cur.execute('UPDATE update_check SET logged_in = 1 WHERE username = %s',(user['username'],))
-            db.commit()
+
             return redirect(url_for('reports.entries'))
 
         flash(error)
