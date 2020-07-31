@@ -81,8 +81,8 @@
     <h2>Σύστημα διαχείρησης βλαβών</h2>
   </div>
   <div class="row " >
-    <div class="col-5  bg-light rounded" id="indexCol">
-    <form class="" method="post" action="{{ url_for('reports.report',src = 0) }}">
+    <div class="col-lg-5  bg-light rounded" id="indexCol">
+    <form class="" method="post" action="{{ url_for('reports.report',src = 1) }}">
          <div class="form-group">
           <p class="h4 mb-4 text-center" >Αναφορά βλάβης</p>
           </div>
@@ -130,41 +130,25 @@
      <button class="btn btn-danger btn-block my-4" type="submit">Kαθαρισμός</button>
    </form>
   </div>
-  {% if g.user %}
-  <div class="col-5 align-self-center bg-light rounded" id="indexCol">
-
-  <form class="" method="get" action="{{url_for('reports.entries')}}">
-    <div class="form-group">
-      <p class="h4 mb-4 text-center">Σύνδεση</p>
-      </div>
-      <div class="form-group">
-       <button class="btn btn-info btn-block my-4" type="submit">Συνέχεια ως{{g.user['username']}}</button>
-      </div>
-  </form>
-  <form class="" method="get" action="{{url_for('auth.logout')}}">
-      <div class="form-group">
-       <button class="btn btn-info btn-block my-4" type="submit">Αποσύνδεση</button>
-      </div>
-  </form>
+  <div class="col-lg-5  rounded" id="indexCol">
+    <table class="table bg-light rounded" style="width:100%">
+      <thead class="thead-light">
+        <tr>
+          <th></th>
+          <th colspan="2"><p class="h4 mb-4 text-center" >Πρόσφατες ανακοινώσεις</p></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td colspan="1">{{post['posting_date']}}:</td>
+          <td colspan="3">{{post['title']}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-  {% else %}
-  <div class="col-5 align-self-center bg-light rounded" id="indexCol">
-  <form class="" method="post">
-      <div class="form-group">
-        <p class="h4 mb-4 text-center">Σύνδεση</p>
-        </div>
-        <div class="form-group">
-            <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Ονομα χρήστη" name="username" required>
-            </div>
-        <div class="form-group">
-        <input type="password" id="defaultLoginFormPassword" class="form-control mb-4" placeholder="Κωδικος προσβασης" name="password" required>
-          </div>
-        <div class="form-group">
-       <button class="btn btn-info btn-block my-4" type="submit">Είσοδος</button>
-         </div>
-  </form>
-  </div>
-  {% endif %}
   </div>
   {% for message in get_flashed_messages() %}
       <div class="alert alert-info">{{ message }}</div>

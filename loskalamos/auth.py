@@ -100,12 +100,20 @@ def register():
     return redirect(url_for('reports.entries'))
 
 
-
+@bp.route('/civil',methods=('GET',))
+def civil_index():
+    db = get_db()
+    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM region')
+    regions = cur.fetchall()
+    cur.execute("SELECT * FROM board")
+    posts = cur.fetchall()
+    cur.close()
+    return render_template('auth/civil_index.html',regions=sorted(regions,key=getKey),posts = posts)
 
 
 @bp.route('/', methods=('GET','POST'))
 def index():
-    print(current_app.instance_path);
     db = get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
 

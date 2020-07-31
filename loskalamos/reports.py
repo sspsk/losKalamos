@@ -17,9 +17,8 @@ def getKey(item):#function to return key to sort tuples
     return item[1]
 
 
-@bp.route('/report', methods = ('POST', ))
-def report():
-
+@bp.route('/<int:src>/report', methods = ('POST', ))#src == 0 return to tech else return to civil
+def report(src):
     type = request.form['type']
     area = request.form['area']
     description = request.form['description']
@@ -57,7 +56,10 @@ def report():
     if error is not  None:
         flash(error)
     cur.close()
-    return redirect(url_for('auth.index'))
+    if src == 0:
+        return redirect(url_for('auth.index'))
+    else:
+        return redirect(url_for('auth.civil_index'))
 
 @bp.route('/entries')
 def entries():
@@ -259,7 +261,27 @@ def download():
     return send_file(os.path.join(current_app.instance_path, 'completedReports.xlsx'), attachment_filename='completedReports.xlsx')
 
 
-
+@bp.route('/<int:doneby>/post',methods = ("POST",))
+def post(doneby):
+    if g.user['type'] != "admin":
+        abort(403,"action denied")
+    error = None
+    db = get_db()
+    cursor = db.cursor()
+    title = request.form['title']
+    description = request.form['description']
+    if title is None or title == "":
+        error = "Το πεδίο τίτλος είναι υποχρεωτικό"
+    if description is None or description == "":
+        error = "Το πεδίο περιγραφή είναι υποχρεωτικό"
+    if error is not None:
+        flash(error)
+        return redirect(url_for('reports.entries'))
+    cursor.execute("INSERT INTO board(title,description,doneby) values(%s,%s,%s)",(title,description,doneby))
+    db.commit()
+    cursor.close()
+    flash("Επιτυχής ανάρτηση ανακοίνωσης")
+    return redirect(url_for('reports.entries'))
 
 
 

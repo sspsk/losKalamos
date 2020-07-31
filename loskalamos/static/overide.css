@@ -6,7 +6,7 @@ body {
  background-size: cover;
 }
 
-#indexCol, #myNav, #entriesForm{
+#indexCol, #myNav, #entriesForm {
   margin : 10px;
 }
 
@@ -19,4 +19,8 @@ body {
 }
 #searchCol{
   padding-bottom: 5px;
+}
+
+#myboard {
+  margin: 20px;
 }
