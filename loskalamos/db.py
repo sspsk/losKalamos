@@ -10,7 +10,6 @@ import os
 def get_connection():
     conn = None
     print("Connecting to the database.")
-
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     return conn
 def get_db():

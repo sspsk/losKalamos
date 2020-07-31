@@ -67,8 +67,8 @@
 
 {% for message in get_flashed_messages() %}
   <div class="alert alert-info" role="alert">{{ message }}</div>
-
 {% endfor %}
+
   {% if g.user['type'] == "admin"  %}
   <div id="searchBox"class="row-fluid d-flex justify-content-center">
   <div class="col-lg-4 bg-light rounded" id="entriesForm">
@@ -224,7 +224,13 @@
         <td>Διαθέσιμο για αναλαβή</td>
         <td><form method="post" action="{{url_for('reports.take', id = post['id'])}}">
         <input id="take"type="submit" class="btn btn-primary" value="Αναλαβή">
-        </form></td>
+        </form>
+        {% if g.user['type'] == "admin" %}
+        <form method="get" action="{{url_for('reports.report_update', id = post['id'])}}">
+        <input type="submit" class="btn btn-info" value="Ενημέρωση">
+        </form>
+        {% endif %}
+      </td>
       </tr>
       <tr>
         <td colspan="5" maxlength="40"><b>Περιγραφή:</b> {{post['description']}}</td>
@@ -280,9 +286,22 @@
           </form>
           </div>
           </div>
+          {% if g.user['type'] == "admin" %}
+          <form method="get" action="{{url_for('reports.report_update', id = post['id'])}}">
+          <input type="submit" class="btn btn-info" value="Ενημέρωση">
+          </form>
+          {% endif %}
           </td>
           {%else%}
+          {% if g.user['type'] == "admin" %}
+          <td>
+          <form method="get" action="{{url_for('reports.report_update', id = post['id'])}}">
+          <input type="submit" class="btn btn-info" value="Ενημέρωση">
+          </form>
+          </td>
+          {% else %}
           <td>-</td>
+          {% endif %}
           {%endif%}
         </tr>
         <tr>

@@ -108,7 +108,7 @@ def index():
     print(current_app.instance_path);
     db = get_db()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
-    
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']

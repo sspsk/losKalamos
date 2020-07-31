@@ -168,7 +168,6 @@ def undo(id):
 
 @bp.route('/<int:id>/delete', methods = ('POST',))
 def delete(id):
-    report = get_report(id)
     if g.user['type'] != "admin":
         abort(403,"action denied")
     db = get_db()
@@ -178,6 +177,28 @@ def delete(id):
     cur.close()
     db.commit()
     return redirect(url_for('reports.entries'))
+
+@bp.route('/<int:id>/update',methods = ('POST','GET'))
+def report_update(id):
+    if g.user['type'] != "admin":#controls who has rights to update a report, maybe needs change
+        abort(403,"action denied")
+    if request.method == 'GET':
+        report = get_report(id)
+        return render_template('reports/update.html',report = report)
+    else:
+        new_desc = request.form['description']
+        rep_id = request.form['id']
+        if new_desc is None or new_desc == "":
+            flash("Η περιγραφή δεν μπορεί να είναι κενή")
+            return redirect(url_for('reports.report_update',id = id))
+        else:
+            db = get_db()
+            cur = db.cursor()
+            cur.execute("UPDATE report SET description = %s WHERE id = %s",(new_desc,rep_id))
+            db.commit()
+            cur.close()
+            flash("Επιτυχής ενημέρωση αναφοράς")
+            return redirect(url_for('reports.report_update',id = rep_id))
 
 #url to download reports
 
