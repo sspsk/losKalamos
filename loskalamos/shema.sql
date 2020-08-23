@@ -46,3 +46,11 @@ CREATE TABLE update_check(
   logged_in INTEGER NOT NULL,
   PRIMARY KEY (username)
 );
+
+create table board(
+id serial primary key,
+title text,
+description text,
+doneby int,
+posting_date DATE NOT NULL DEFAULT CURRENT_DATE
+);
