@@ -3,6 +3,7 @@ from flask import Blueprint, flash, g, redirect, render_template, request, url_f
 from werkzeug.exceptions import abort
 #inside nojs branch
 from loskalamos.db import get_db
+from loskalamos.req import send,TokenParser
 import psycopg2.extras
 import json
 import time
@@ -10,12 +11,14 @@ import xlsxwriter
 import os
 import redis
 import random
+
 bp = Blueprint('reports',__name__)
 
-
+#auxiliary functions
 def getKey(item):#function to return key to sort tuples
     return item[1]
-
+def isValidPhoneNumber(num):
+    return (num >= 6900000000 and num <=6999999999)
 
 @bp.route('/<int:src>/report', methods = ('POST', ))#src == 0 return to tech else return to civil
 def report(src):
@@ -41,6 +44,8 @@ def report(src):
         error = 'Επιλέξτε κοινότητα.'
     elif not address:
         error = 'Προσθέστε διεύθυνση.'
+    elif contact_phone != "" and not isValidPhoneNumber(int(contact_phone)): #if given invalid number
+        error = 'Μη εγκυρος αριθμος τηλεφώνου'
     if error is None:
         cur.execute('INSERT INTO report (type, area, region, description, address, contact_name, contact_phone, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (type, area, region, description, address, contact_name, contact_phone,False))
         id = cur.fetchone()['id']
@@ -52,7 +57,9 @@ def report(src):
             pipe.execute()
         db.commit()
         flash('Επιτυχημένη αναφορά. Id αναφοράς: {1}'.format(contact_name,id))
-
+        if contact_phone != "" : #if given phone number
+            parser = TokenParser()
+            send(parser,os.environ['WEB2SMS_USR'],os.environ['WEB2SMS_PSW'],contact_phone,'Η αναφορά σας με Α/Α:{0} καταχωρήθηκε.'.format(id))
     if error is not  None:
         flash(error)
     cur.close()
@@ -151,6 +158,11 @@ def done(id):
     cur.execute('UPDATE update_check SET check_bit = 1')
     cur.close()
     db.commit()
+    contact_phone = report['contact_phone']
+    id = report['id']
+    if contact_phone != "" : #if given phone number
+        parser = TokenParser()
+        send(parser,os.environ['WEB2SMS_USR'],os.environ['WEB2SMS_PSW'],contact_phone,'Η αναφοράς σας με Α/Α:{0} διεκπεραιώθηκε.Ευχαριστουμε.'.format(id))
     return redirect(url_for('reports.entries'))
 
 @bp.route('/<int:id>/undo', methods = ('POST',))
