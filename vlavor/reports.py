@@ -107,14 +107,22 @@ def entries():
             postsnottaken = cur.fetchall()
             cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created,  p.contact_name FROM report p JOIN technician u ON p.takenby = u.id WHERE done = %s AND p.region = %s ORDER BY id DESC',(True,g.user['region']))
             postscompleted = cur.fetchall()
+        #get posts from user(all if he is the admin)
+        if g.user['username'] == "admin":
+            cur.execute('SELECT * FROM board')
+            posts = cur.fetchall()
+        else:
+            cur.execute('SELECT * FROM board WHERE doneby = %s',(g.user['id'],))
+            posts = cur.fetchall()
     else:
         cur.execute('SELECT p.id, p.type, area, p.region, address, description, takenby, username, created, p.contact_name FROM report p JOIN technician u ON p.takenby = u.id  WHERE p.type = %s AND p.region = %s AND p.takenby = %s AND done = %s ORDER BY id DESC ',(g.user['type'], g.user['region'], g.user['id'], False))
         poststaken = cur.fetchall()
         cur.execute('SELECT id, type, area, region, address, description, created, contact_name FROM report WHERE takenby IS NULL AND type = %s AND region = %s AND done = %s ORDER BY id DESC',(g.user['type'], g.user['region'], False))
         postsnottaken = cur.fetchall()
         postscompleted = []
+        posts = []
     cur.close()
-    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=sorted(regions,key=getKey) ,postscompleted = postscompleted)
+    return render_template('reports/entries.html',poststaken = poststaken, postsnottaken = postsnottaken ,regions=sorted(regions,key=getKey) ,postscompleted = postscompleted,posts = posts)
 
 
 def get_report(id):
@@ -125,9 +133,15 @@ def get_report(id):
     if report is None:
         abort(404, "Post id {0} doesn't exist.".format(id))
 
-
     cur.close()
     return report
+
+def get_post(id):
+    cur = get_db().cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM board WHERE id = %s',(id,))
+    post = cur.fetchone()
+    cur.close()
+    return post
 
 @bp.route('/vlavor/<int:id>/take', methods = ('POST',))
 def take(id):
@@ -273,7 +287,7 @@ def download():
     return send_file(os.path.join(current_app.instance_path, 'completedReports.xlsx'), attachment_filename='completedReports.xlsx')
 
 
-@bp.route('/vlavor/<int:doneby>/post',methods = ("POST",))
+@bp.route('/vlavor/post/<int:doneby>',methods = ("POST",))
 def post(doneby):
     if g.user['type'] != "admin":
         abort(403,"action denied")
@@ -294,6 +308,63 @@ def post(doneby):
     cursor.close()
     flash("Επιτυχής ανάρτηση ανακοίνωσης")
     return redirect(url_for('reports.entries'))
+
+
+@bp.route('/vlavor/post/<int:post_id>/delete',methods = ("POST",))
+def del_post(post_id):
+    if g.user['type'] != "admin":
+        abort(403,"action denied")
+    db = get_db()
+    cursor = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cursor.execute("SELECT * FROM board WHERE id = %s",(post_id,))
+    post = cursor.fetchone()
+    if post is None:
+        flash("Μη υπαρκτή ανακοίνωση")
+        return redirect(url_for('reports.entries'))
+    if g.user['username'] == "admin":
+        cursor.execute("DELETE FROM board WHERE id = %s",(post_id,))
+        cursor.close()
+        db.commit()
+        flash("Επιτυχής διαγραφή ανακοίνωσης")
+        return redirect(url_for('reports.entries'))
+
+    else:
+        print(post)
+        if post['doneby'] != g.user['id']:
+            abort(403,"action denied")
+        cursor.execute("DELETE FROM board WHERE id = %s",(post_id,))
+        cursor.close()
+        db.commit()
+        flash("Επιτυχής διαγραφή ανακοίνωσης")
+        return redirect(url_for('reports.entries'))
+
+
+@bp.route('/vlavor/post/<int:post_id>/update',methods=("GET","POST"))
+def update_post(post_id):
+    if g.user['type'] != "admin":
+        abort(403,"action denied")
+    post = get_post(post_id)
+    if post is None:
+        flash("Μη υπαρκτή ανακοίνωση")
+        return redirect(url_for('reports.entries'))
+    if request.method == "GET":
+        return render_template('reports/post_update.html',post=post)
+    else:
+        newtitle = request.form['title']
+        newdesc = request.form['description']
+        if newtitle is None or newtitle == '':
+            flash("Ο τίτλος δεν μπορεί να είναι κενός.")
+            return redirect(url_for('reports.update_post',post_id=post_id))
+        if newdesc is None or newdesc == '':
+            flash("Η περιγραφή δεν μπορεί να είναι κενή.")
+            return redirect(url_for('reports.update_post',post_id=post_id))
+        db = get_db()
+        cursor =  db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cursor.execute("UPDATE board SET title = %s, description = %s WHERE id = %s",(newtitle,newdesc,post_id))
+        cursor.close()
+        db.commit()
+        flash("Επιτυχής ενημέρωση ανακοίνωσης")
+        return redirect(url_for('reports.update_post',post_id=post_id))
 
 
 

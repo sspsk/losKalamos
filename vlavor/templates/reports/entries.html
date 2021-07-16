@@ -212,9 +212,47 @@
 </div>
 </div>
 {% endif %}
+
+{% if g.user['type'] == "admin" %}
+<div class="d-flex justify-content-center">
+  <h3>Οι ανακοινώσεις μου</h3>
+</div>
+
+<table class="table table-striped bg-light rounded">
+  <thead>
+    <tr>
+      <th>A/A</th>
+      <th>Τίτλος</th>
+      <th>Περιγραφή</th>
+
+    </tr>
+  </thead>
+  <tbody >
+    {% for post in posts %}
+    <tr data-id="{{post['id']}}" class="tableRow">
+      <td>{{ post['id'] }}</td>
+      <td >{{post['title'] }}</td>
+      <td>{{post['description']}}</td>
+      <td><form method="post" action="{{url_for('reports.del_post', post_id = post['id'])}}">
+      <input id="del"type="submit" class="btn btn-danger" value="Διαγραφη">
+      </form>
+    </td>
+    <td><form method="get" action="{{url_for('reports.update_post', post_id = post['id'])}}">
+    <input id="upd"type="submit" class="btn btn-primary" value="Ενημέρωση">
+    </form>
+  </td>
+    </tr>
+
+    {% endfor %}
+
+  </tbody>
+</table>
+
+{% endif %}
+
 <div class="d-flex justify-content-center">
   <h3>Διαθέσιμες αναφορές</h3>
-  </div>
+</div>
 
 
   <table class="table table-striped bg-light rounded">

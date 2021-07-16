@@ -191,5 +191,3 @@ def delArea():
     db.commit()
     cur.close()
     return redirect(url_for('reports.entries'))
-#delete region
-#delete area
