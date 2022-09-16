@@ -1,0 +1,26 @@
+body {
+ background: url('images/oropos-blur.jpg') no-repeat center center fixed;
+ -webkit-background-size: cover;
+ -moz-background-size: cover;
+ -o-background-size: cover;
+ background-size: cover;
+}
+
+#indexCol, #myNav, #entriesForm {
+  margin : 10px;
+}
+
+#searchLabel {
+  margin-right: 5px
+}
+
+#searchBtn, #searchText, #showallBtn, #searchTable {
+  margin : 5px;
+}
+#searchCol{
+  padding-bottom: 5px;
+}
+
+#myboard {
+  margin: 20px;
+}

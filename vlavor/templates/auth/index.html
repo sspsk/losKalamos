@@ -1,0 +1,217 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block myscript %}
+
+<script>
+  $(document).ready(function(){
+    $("#regionSelector").change(function(){
+      $.getJSON($SCRIPT_ROOT + '/vlavor/getareas',{region : $(this).val()},function(data){
+          $("#areaSelector").empty();
+          $("#areaSelector").append('<option selected disabled>Υποπεριοχή</option>');
+        for(let i =0;i<data.length;i++){
+          $("#areaSelector").append('<option>'+data[i][1]+'</option>');
+        }
+      });
+      //kane get request me to $(this).val() kai append to html sto select kato
+    });
+    $("#searchBtn").click(function(){
+        var arg = $("#searchText").val();
+        search(arg);
+    });
+
+
+    $("#cancelBtn").on("click",function(){
+      $("#searchRes").empty();
+      $("#searchTable").attr("hidden",true);
+    });
+  });
+
+  function search(arg) {
+
+    $.getJSON($SCRIPT_ROOT+'/vlavor/entries',{report_id : arg},function(data){
+
+      if(data[0] != null){
+        $("#searchRes").empty();
+        $("#searchTable").removeAttr('hidden');
+        console.log(data[0]);
+        var html = `
+        <tr data-id="${data[0][0]}">
+          <td>${data[0][0]}</td>
+          <td>${data[0][1]}</td>
+          <td>${data[0][3]}</td>
+          <td>${data[0][2]}</td>
+          <td>${data[0][4]}</td>
+          `;
+        if(data[0][7] == null){ //if not taken
+          html += `
+        <td>${data[0][8]}</td>
+        <td>Σε αναμονή</td> `;
+        }
+        else{
+          html +=`<td>${data[0][8]}</td>`;
+          if(data[0][6] == true){ //if taken and done
+              html += `<td>Ολοκληρώθηκε</td>`;
+          }
+          else{ //if taken and not done
+            html += `<td>Υπο αναλαβή</td>`;
+          }
+            }
+        html += `</tr>
+        <tr>
+          <td colspan="5"><b>Περιγραφή:</b> ${data[0][5]}</td>
+          <td colspan="3"><b>Ονοματεπώνυμο:</b> ${data[0][9]}</td>
+        </tr>
+        `;
+
+        $("#searchRes").append(html);
+      }
+    });
+  }
+</script>
+{% endblock %}
+{% block content %}
+
+<div class="container">
+
+
+  <div class="row d-flex justify-content-center ">
+    <h1>Δήμος Ωρωπού</h1>
+  </div>
+  <div class="row d-flex justify-content-center">
+    <h2>Σύστημα διαχείρησης βλαβών</h2>
+  </div>
+  <div class="row " >
+    <div class="col-5  bg-light rounded" id="indexCol">
+    <form class="" method="post" action="{{ url_for('reports.report',src = 0) }}">
+         <div class="form-group">
+          <p class="h4 mb-4 text-center" >Αναφορά βλάβης</p>
+          </div>
+           <div class="form-group">
+          <select class="form-control"  name="type" >
+            <option selected disabled>Είδος</option>
+            <option>Άλλο</option>
+            <option>Ηλεκτροφωτισμός</option>
+            <option>Καθαριότητα</option>
+            <option>Οδόστρωμα</option>
+            <option>Ύδρευση</option>
+
+          </select>
+          </div>
+           <div class="form-group">
+             <select id="regionSelector" class="form-control"  name="region" >
+               <option selected disabled>Κοινότητα</option>
+               {% for region in regions %}
+               <option>{{region['name']}}</option>
+               {%endfor%}
+             </select>
+          </div>
+          <div class="form-group">
+            <select id="areaSelector" class="form-control"  name="area" >
+              <option selected disabled>Περιοχή</option>
+            </select>
+         </div>
+          <div class="form-group">
+              <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Διεύθυνση βλάβης" name="address"  maxlength="40"required>
+          </div>
+           <div class="form-group">
+          <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Περιγραφή βλάβης" name="description" maxlength="120"required>
+          </div>
+          <div class="form-group">
+         <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Ονοματεπώνυμο(οχι απαραίτητο-επιθυμητό)" name="contact_name" maxlength="40">
+         </div>
+         <div class="form-group">
+        <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Κιν. τηλέφωνο επικοινωνίας(οχι απαραίτητο-επιθυμητό)" name="contact_phone" maxlength="21">
+        </div>
+        <div class="form-group">
+           <button class="btn btn-info btn-block my-4" type="submit">Αναφορά</button>
+        </div>
+    </form>
+    <form class="form-group" >
+     <button class="btn btn-danger btn-block my-4" type="submit">Kαθαρισμός</button>
+   </form>
+  </div>
+  {% if g.user %}
+  <div class="col-5 align-self-center bg-light rounded" id="indexCol">
+
+  <form class="" method="get" action="{{url_for('reports.entries')}}">
+    <div class="form-group">
+      <p class="h4 mb-4 text-center">Σύνδεση</p>
+      </div>
+      <div class="form-group">
+       <button class="btn btn-info btn-block my-4" type="submit">Συνέχεια ως{{g.user['username']}}</button>
+      </div>
+  </form>
+  <form class="" method="get" action="{{url_for('auth.logout')}}">
+      <div class="form-group">
+       <button class="btn btn-info btn-block my-4" type="submit">Αποσύνδεση</button>
+      </div>
+  </form>
+  </div>
+  {% else %}
+  <div class="col-5 align-self-center bg-light rounded" id="indexCol">
+  <form class="" method="post">
+      <div class="form-group">
+        <p class="h4 mb-4 text-center">Σύνδεση</p>
+        </div>
+        <div class="form-group">
+            <input type="text" id="defaultLoginFormUsername" class="form-control mb-4" placeholder="Ονομα χρήστη" name="username" required>
+            </div>
+        <div class="form-group">
+        <input type="password" id="defaultLoginFormPassword" class="form-control mb-4" placeholder="Κωδικος προσβασης" name="password" required>
+          </div>
+        <div class="form-group">
+       <button class="btn btn-info btn-block my-4" type="submit">Είσοδος</button>
+         </div>
+  </form>
+  </div>
+  {% endif %}
+  </div>
+  {% for message in get_flashed_messages() %}
+      <div class="alert alert-info">{{ message }}</div>
+  {% endfor %}
+  <div class="row row-fluid d-flex justify-content-center">
+    <div id="searchCol"class="col-lg-5 bg-light rounded">
+      <div class="row row-fluid ">
+        <div class="col-lg-12 d-flex justify-content-center ">
+          <h4>Αναζήτηση με Α/Α</h4>
+          </div>
+      </div>
+      <div class="row row-fluid">
+        <div class="col-lg-6 ">
+          <input  id="searchText" class="form-control rounded" type="text" placeholder="Ιd αναφορας" aria-label="Search" required>
+          </div>
+          <div class="col-lg-3 d-flex justify-content-center ">
+            <button id="searchBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αναζήτηση</button>
+            </div>
+            <div class="col-lg-3 d-flex justify-content-center ">
+              <button id="cancelBtn" class="btn btn-info btn-rounded btn-sm my-0" type="submit">Αφαίρεση αναζήτησης</button>
+            </div>
+      </div>
+      </div>
+  </div>
+
+  <table id="searchTable" class="table table-striped bg-light rounded" hidden>
+    <thead>
+      <tr>
+        <th>A/A</th>
+        <th>Τύπος βλάβης</th>
+        <th>Κοινότητα</th>
+        <th>Περιοχή</th>
+        <th>Διεύθυνση</th>
+        <th>Καταχωρήθηκε</th>
+        <th>Κατάσταση</th>
+
+        <th
+      </tr>
+    </thead>
+    <tbody id="searchRes">
+
+    </tbody>
+  </table>
+
+</div>
+
+
+
+{% endblock %}
